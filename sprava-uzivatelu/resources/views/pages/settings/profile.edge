@@ -1,0 +1,20 @@
+@let(me = auth.user)
+@layouts.settings({ title: 'Profil' })
+  @form({ route: 'profile.update', class: 'stack' })
+    @section({ title: 'Profil', description: 'Jak tě uvidí ostatní a kam ti budeme psát.' })
+      @field.root({ name: 'fullName' })
+        @!field.label({ text: 'Celé jméno' })
+        @!input.control({ value: me.fullName, autocomplete: 'name' })
+        @!field.error()
+      @end
+      @field.root({ name: 'email' })
+        @!field.label({ text: 'E-mail' })
+        @!input.control({ type: 'email', value: me.email, autocomplete: 'email' })
+        @!field.error()
+      @end
+    @end
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">Uložit profil</button>
+    </div>
+  @end
+@end

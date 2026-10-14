@@ -1,0 +1,57 @@
+{{--
+  Layout pro přihlášené. Položky navigace: každá má route a ikonu,
+  "adminOnly" se zobrazí jen administrátorům (přístup ale hlídá middleware, ne tohle).
+--}}
+@let(nav = [
+  { label: 'Přehled', route: 'dashboard', icon: 'lucide:layout-grid' },
+  { label: 'Uživatelé', route: 'users.index', icon: 'lucide:users', adminOnly: true },
+  { label: 'Nastavení', route: 'profile.edit', icon: 'lucide:settings-2', matchPrefix: '/settings' },
+])
+@let(pageTitle = $props.get('title'))
+@let(me = auth.user)
+<!DOCTYPE html>
+<html lang="cs" data-theme="{{ currentTheme(request) }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ pageTitle ? `${pageTitle} | Správa uživatelů` : 'Správa uživatelů' }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('dumper')
+  </head>
+  <body>
+    <header class="header header--bar">
+      <div class="header__inner">
+        @!logo()
+        <div class="header__right">
+          <span class="userchip">
+            <span class="avatar avatar--sm" aria-hidden="true">{{ me.initials }}</span>
+            <span class="userchip__name">{{ me.displayName }}</span>
+          </span>
+          @!themeToggle()
+          @form({ route: 'session.destroy', method: 'POST' })
+            <button type="submit" class="btn btn--secondary btn--sm">
+              @svg('lucide:log-out', { width: 15, height: 15 })
+              <span class="hide-sm">Odhlásit</span>
+            </button>
+          @end
+        </div>
+      </div>
+    </header>
+
+    <nav class="subnav" aria-label="Hlavní navigace">
+      <div class="subnav__inner">
+        @each(item in nav)
+          @if(!item.adminOnly || me.isAdmin)
+            @navLink({ route: item.route, matchPrefix: item.matchPrefix, class: 'subnav__item' })
+              @svg(item.icon, { width: 15, height: 15 })
+              {{ item.label }}
+            @end
+          @end
+        @end
+      </div>
+    </nav>
+
+    <main class="app-main">{{{ await $slots.main() }}}</main>
+    @include('partials/flash_alerts')
+  </body>
+</html>

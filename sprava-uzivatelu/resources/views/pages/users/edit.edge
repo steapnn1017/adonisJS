@@ -1,0 +1,33 @@
+@layouts.app({ title: user.displayName })
+  @page({ title: user.displayName, description: `Účet založen ${formatDate(user.createdAt)}`, narrow: true })
+    @slot('actions')
+      @link({ route: 'users.index', class: 'btn btn--ghost' })
+        @svg('lucide:arrow-left', { width: 15, height: 15 })
+        Zpět na seznam
+      @end
+    @end
+
+    @if(user.id === auth.user.id)
+      <p class="note">
+        @svg('lucide:info', { width: 16, height: 16 })
+        Upravuješ svůj vlastní účet. Roli admina ani aktivní stav si odebrat nemůžeš.
+      </p>
+    @end
+
+    @form({
+      route: 'users.update',
+      routeParams: { id: user.id },
+      class: 'panel form-panel',
+      'x-data': '{ submitting: false }',
+      'x-on:submit': 'submitting = true',
+    })
+      @include('partials/user_form')
+      <div class="form-actions">
+        @link({ route: 'users.index', class: 'btn btn--ghost' })
+          Zrušit
+        @end
+        <button type="submit" class="btn btn--primary" x-bind:disabled="submitting">Uložit změny</button>
+      </div>
+    @end
+  @end
+@end

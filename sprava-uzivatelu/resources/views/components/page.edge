@@ -1,0 +1,25 @@
+{{--
+  Rám stránky: nadpis, popis a volitelná tlačítka vpravo (slot "actions").
+  narrow: true = užší stránka pro formuláře, aby tlačítka v hlavičce lícovala s formulářem.
+--}}
+@let(pageTitle = $props.get('title'))
+@let(pageDescription = $props.get('description'))
+
+<div class="page {{ $props.get('narrow') ? 'page--narrow' : '' }}">
+  @if(pageTitle || pageDescription || $slots.actions)
+    <header class="page__header">
+      <div>
+        @if(pageTitle)
+          <h1 class="page__title">{{ pageTitle }}</h1>
+        @end
+        @if(pageDescription)
+          <p class="page__description">{{ pageDescription }}</p>
+        @end
+      </div>
+      @if($slots.actions)
+        <div class="page__actions">{{{ await $slots.actions() }}}</div>
+      @end
+    </header>
+  @end
+  {{{ await $slots.main() }}}
+</div>

@@ -1,0 +1,94 @@
+{{--
+  Přehled. Controller posílá:
+    stats       – čísla pro admina (null pro běžného uživatele)
+    recentUsers – 5 nejnovějších účtů (jen pro admina)
+--}}
+@let(me = auth.user)
+@layouts.app({ title: 'Přehled' })
+  @page({
+    title: `Ahoj, ${me.fullName ? me.fullName.split(' ')[0] : me.email}`,
+    description: me.isAdmin ? 'Takhle teď vypadají účty v aplikaci.' : 'Tady je přehled tvého účtu.',
+  })
+    @if(stats)
+      <section class="stats" aria-label="Souhrn účtů">
+        <div class="stat">
+          <span class="stat__label">Všechny účty</span>
+          <span class="stat__value">{{ stats.total }}</span>
+          <span class="stat__hint">{{ stats.total - stats.active }} zablokovaných</span>
+        </div>
+        <div class="stat">
+          <span class="stat__label">Aktivní</span>
+          <span class="stat__value">{{ stats.active }}</span>
+          <span class="stat__hint">
+            {{ stats.total ? Math.round(stats.active / stats.total * 100) : 0 }} % všech účtů
+          </span>
+        </div>
+        <div class="stat">
+          <span class="stat__label">Administrátoři</span>
+          <span class="stat__value">{{ stats.admins }}</span>
+          <span class="stat__hint">mají přístup do správy</span>
+        </div>
+        <div class="stat">
+          <span class="stat__label">Noví za 7 dní</span>
+          <span class="stat__value">{{ stats.newThisWeek }}</span>
+          <span class="stat__hint">registrace a založené účty</span>
+        </div>
+      </section>
+
+      <section class="panel panel--flush">
+        <header class="panel__head">
+          <h2 class="section__title">Naposledy přidaní</h2>
+          @link({ route: 'users.index', class: 'il panel__link' })
+            Všichni uživatelé
+          @end
+        </header>
+        <ul class="rows">
+          @each(user in recentUsers)
+            <li>
+              @link({ route: 'users.edit', routeParams: { id: user.id }, class: 'row' })
+                <span class="avatar" aria-hidden="true">{{ user.initials }}</span>
+                <span class="person">
+                  <span class="person__name">{{ user.displayName }}</span>
+                  <span class="person__email">{{ user.email }}</span>
+                </span>
+                <span class="row__meta">{{ fromNow(user.createdAt) }}</span>
+              @end
+            </li>
+          @end
+        </ul>
+      </section>
+    @else
+      <section class="panel account">
+        <div class="account__head">
+          <span class="avatar avatar--lg" aria-hidden="true">{{ me.initials }}</span>
+          <div class="person">
+            <span class="person__name person__name--lg">{{ me.displayName }}</span>
+            <span class="person__email">{{ me.email }}</span>
+          </div>
+        </div>
+        <dl class="facts">
+          <div>
+            <dt>Role</dt>
+            <dd>Uživatel</dd>
+          </div>
+          <div>
+            <dt>Účet založen</dt>
+            <dd>{{ formatDate(me.createdAt) }}</dd>
+          </div>
+          <div>
+            <dt>Poslední přihlášení</dt>
+            <dd>{{ me.lastLoginAt ? fromNow(me.lastLoginAt) : 'teď poprvé' }}</dd>
+          </div>
+        </dl>
+        <div class="account__actions">
+          @link({ route: 'profile.edit', class: 'btn btn--secondary' })
+            Upravit profil
+          @end
+          @link({ route: 'password.edit', class: 'btn btn--ghost' })
+            Změnit heslo
+          @end
+        </div>
+      </section>
+    @end
+  @end
+@end

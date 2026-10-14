@@ -1,0 +1,22 @@
+{{--
+  Odkaz, který si sám nastaví aria-current="page", když odpovídá aktuální URL.
+  Ve výchozím stavu platí i pro vnořené adresy (/users → /users/5/edit).
+  exact: true = jen přesná shoda. matchPrefix: '/settings' = aktivní pro celou sekci.
+--}}
+@let(linkHref = urlFor($props.get('route')))
+@let(currentPath = request.url())
+@let(prefix = $props.get('matchPrefix'))
+@let(isActive = $props.get('exact')
+  ? currentPath === linkHref
+  : currentPath === linkHref ||
+    currentPath.startsWith(`${linkHref}/`) ||
+    (prefix && currentPath.startsWith(prefix)))
+
+<a {{
+  $props
+    .except(['route', 'exact', 'matchPrefix'])
+    .merge({ href: linkHref, 'aria-current': isActive ? 'page' : false })
+    .toAttrs()
+}}>
+  {{{ await $slots.main() }}}
+</a>

@@ -1,0 +1,1310 @@
+/* ==========================================================================
+   Správa uživatelů – styly
+   Barvy, písmo a zaoblení jsou jen v tokenech nahoře. Přebarvení celé
+   aplikace = změna hodnot v :root, nic dalšího se nepřepisuje.
+   ========================================================================== */
+
+/* Písmo Geist je v node_modules a Vite ho přibalí – žádné načítání z Google Fonts */
+@import '@fontsource-variable/geist';
+
+:root {
+  --sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* tmavý motiv je výchozí */
+  --paper: #0b0c0e;
+  --card: #111215;
+  --ink: #ece8df;
+  --ink-2: #c9c5bc;
+  --muted: #8c8a84;
+  --subtle: #5f5e5a;
+  --placeholder: #7a7873;
+  --line: #1c1d21;
+  --line-2: #26272b;
+  --btn: #ece8df;
+  --btn-fg: #0b0c0e;
+  --ring: rgba(236, 232, 223, 0.16);
+  --field: #0e0f12;
+  --hover: rgba(236, 232, 223, 0.04);
+
+  /* sémantické barvy jen pro stav účtu a chyby, nikdy jako dekorace */
+  --ok: #9fcca4;
+  --ok-bg: rgba(127, 182, 133, 0.12);
+  --danger: #eb8f85;
+  --danger-bg: rgba(224, 104, 92, 0.12);
+  --danger-solid: #c2463a;
+
+  --r: 8px;
+  --r-lg: 12px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --paper: #f3f2ee;
+  --card: #fcfbf9;
+  --ink: #0b0c0e;
+  --ink-2: #2a2b2e;
+  --muted: #64625d;
+  --subtle: #a3a19b;
+  --placeholder: #8a8883;
+  --line: #e8e6e1;
+  --line-2: #dad8d2;
+  --btn: #0b0c0e;
+  --btn-fg: #fcfbf9;
+  --ring: rgba(11, 12, 14, 0.12);
+  --field: #ffffff;
+  --hover: rgba(11, 12, 14, 0.03);
+
+  --ok: #346538;
+  --ok-bg: #edf3ec;
+  --danger: #9f2f2d;
+  --danger-bg: #fdebec;
+  --danger-solid: #b3362b;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  min-height: 100%;
+}
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'tnum' 1;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+ul {
+  list-style: none;
+}
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+[x-cloak] {
+  display: none !important;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.muted {
+  color: var(--muted);
+}
+.kbd {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line-2);
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--ink-2);
+}
+
+/* --- tlačítka --- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--r);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    opacity 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+.btn:focus-visible,
+.iconbtn:focus-visible,
+.row:focus-visible,
+.brand:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+/* zmáčknutí = okamžitá odezva, že aplikace klik zaregistrovala */
+.btn:active:not(:disabled),
+.iconbtn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.btn--primary {
+  background: var(--btn);
+  color: var(--btn-fg);
+}
+.btn--secondary {
+  background: var(--card);
+  border-color: var(--line-2);
+}
+.btn--ghost {
+  color: var(--muted);
+}
+.btn--danger {
+  background: var(--danger-solid);
+  color: #fff;
+}
+.btn--block {
+  width: 100%;
+}
+.btn--sm {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13.5px;
+}
+.btn--sm::after {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover,
+  .btn--danger:hover {
+    opacity: 0.88;
+  }
+  .btn--secondary:hover {
+    border-color: var(--subtle);
+  }
+  .btn--ghost:hover {
+    color: var(--ink);
+  }
+}
+
+/* --- ikonová tlačítka --- */
+.iconbtn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r);
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+.iconbtn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+.iconbtn > svg {
+  grid-area: 1 / 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  .iconbtn:hover {
+    color: var(--ink);
+    border-color: var(--subtle);
+  }
+  .iconbtn--danger:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: var(--danger-bg);
+  }
+}
+
+/* ikony slunce/měsíce se prolnou na místě podle html[data-theme] */
+.themetoggle__icon {
+  opacity: 0;
+  scale: 0.4;
+  filter: blur(4px);
+  transition:
+    opacity 300ms var(--ease-out),
+    scale 300ms var(--ease-out),
+    filter 300ms var(--ease-out);
+}
+:root[data-theme='dark'] .themetoggle__icon--sun,
+:root[data-theme='light'] .themetoggle__icon--moon {
+  opacity: 1;
+  scale: 1;
+  filter: blur(0);
+}
+
+/* --- formulářová pole --- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field__label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.field__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--field);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: 14px;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+select.field__input {
+  appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+  /* šipka selectu jako čistý CSS trojúhelník přes dva gradienty, ladí s barvou textu */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    right 17px center,
+    right 12px center;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+.field__input::placeholder {
+  color: var(--placeholder);
+}
+.field__input:focus {
+  outline: none;
+  border-color: var(--muted);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.field__input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--field) inset;
+  -webkit-text-fill-color: var(--ink);
+}
+.field__input[data-invalid='true'] {
+  border-color: var(--danger);
+}
+.field__hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.field__error {
+  font-size: 12.5px;
+  color: var(--danger);
+}
+
+/* přepínač (checkbox) pro aktivní účet */
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+.switch__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.switch__track {
+  flex: none;
+  width: 36px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--line-2);
+  padding: 2px;
+  transition: background-color 200ms ease;
+}
+.switch__thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform 200ms var(--ease-out);
+}
+.switch__input:checked + .switch__track {
+  background: var(--ink);
+}
+.switch__input:checked + .switch__track .switch__thumb {
+  background: var(--paper);
+  transform: translateX(16px);
+}
+.switch__input:focus-visible + .switch__track {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.switch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.switch__label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* --- odkaz v textu --- */
+.il {
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+.il:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* --- avatar s iniciálami a jméno + e-mail --- */
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--line-2);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+.avatar--lg {
+  width: 52px;
+  height: 52px;
+  font-size: 16px;
+}
+.person {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.person__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 14px;
+}
+.person__name--lg {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.person__email {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person__badges {
+  gap: 6px;
+  margin-top: 6px;
+}
+.you {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 0 7px;
+}
+
+/* --- štítky role a stavu --- */
+.badge,
+.status {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge {
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+}
+.badge--strong {
+  border-color: transparent;
+  background: var(--ink);
+  color: var(--paper);
+}
+.status--on {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.status--off {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+/* ==========================================================================
+   Hlavička a navigace
+   ========================================================================== */
+.header--bar {
+  height: 60px;
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.header__inner {
+  width: 100%;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border-radius: 6px;
+}
+.brand__name {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.userchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+  margin-right: 2px;
+  border-right: 1px solid var(--line-2);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.userchip__name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subnav {
+  height: 46px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subnav__inner {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+  padding: 0 28px;
+}
+.subnav__item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color 150ms ease;
+}
+.subnav__item:hover,
+.subnav__item[aria-current='page'] {
+  color: var(--ink);
+}
+.subnav__item[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--ink);
+}
+.app-main {
+  display: flex;
+  min-height: calc(100vh - 106px);
+}
+
+/* ==========================================================================
+   Stavební bloky stránky
+   ========================================================================== */
+.page {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px 28px 72px;
+}
+.page--narrow {
+  max-width: 816px;
+}
+.page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 28px;
+}
+.page__title {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.page__description {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+.page__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 28px;
+}
+.panel--flush {
+  padding: 0;
+  overflow: hidden;
+}
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+}
+.panel__link {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.section + .section {
+  margin-top: 26px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+.section__title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.section__description {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13.5px;
+  text-wrap: pretty;
+}
+.section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.section__header + .section__body {
+  margin-top: 18px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+.note svg {
+  flex: none;
+  color: var(--muted);
+}
+
+/* --- statistiky na přehledu: jen čísla, žádný graf --- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+}
+.stat__label {
+  font-size: 13px;
+  color: var(--muted);
+}
+.stat__value {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+.stat__hint {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* --- řádky seznamu (naposledy přidaní) --- */
+.rows li + li {
+  border-top: 1px solid var(--line);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px;
+  transition: background-color 150ms ease;
+}
+.row:hover {
+  background: var(--hover);
+}
+.row__meta {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* --- karta vlastního účtu (běžný uživatel) --- */
+.account {
+  max-width: 640px;
+}
+.account__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.facts dt {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.facts dd {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.account__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+/* --- filtry nad tabulkou --- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.search {
+  position: relative;
+  flex: 1 1 260px;
+}
+.search__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--muted);
+  pointer-events: none;
+}
+.search__input {
+  padding-left: 36px;
+}
+.filters__select {
+  flex: 0 1 180px;
+}
+
+/* --- tabulka uživatelů --- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th {
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+.table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+.table tbody tr + tr td {
+  border-top: 1px solid var(--line);
+}
+.table tbody tr {
+  transition: background-color 150ms ease;
+}
+.table tbody tr:hover {
+  background: var(--hover);
+}
+.table th:first-child,
+.table td:first-child {
+  padding-left: 22px;
+}
+.table td.muted {
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+.table__actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-right: 18px !important;
+}
+.table__actions > * + * {
+  margin-left: 6px;
+}
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* --- stránkování --- */
+.pager {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-top: 16px;
+}
+.pager > :last-child {
+  justify-self: end;
+}
+.pager__info {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* --- prázdný stav --- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+}
+.empty__mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.empty h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.empty p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* --- potvrzovací dialog mazání --- */
+.dialog {
+  margin: auto;
+  width: min(420px, calc(100% - 32px));
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55);
+  /* otevření: krátké zesílení + nepatrné zvětšení ze středu (modál není ukotvený k tlačítku) */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+.dialog:not([open]) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.dialog::backdrop {
+  background: rgba(5, 5, 6, 0.6);
+  transition:
+    opacity 200ms ease,
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+.dialog__body {
+  padding: 24px;
+}
+.dialog__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--danger-bg);
+  color: var(--danger);
+  margin-bottom: 14px;
+}
+.dialog__title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.dialog__text {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+/* --- nastavení: menu vlevo --- */
+.sidebar-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.sidebar-layout__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-layout__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+.sidebar-layout__item:hover,
+.sidebar-layout__item[aria-current='page'] {
+  color: var(--ink);
+}
+.sidebar-layout__item[aria-current='page'] {
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.sidebar-layout__content {
+  max-width: 620px;
+}
+.stack .form-actions {
+  justify-content: flex-start;
+}
+
+/* ==========================================================================
+   Přihlášení / registrace
+   ========================================================================== */
+.auth {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100vh;
+}
+.auth__form-col {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 36px;
+  background: var(--card);
+}
+.auth__form-wrap {
+  margin: auto;
+  width: 100%;
+  max-width: 360px;
+  padding: 40px 0;
+}
+.auth__title {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.auth__sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+  text-wrap: pretty;
+}
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 26px;
+}
+.auth__foot {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.auth__aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 28px 44px 44px;
+  border-left: 1px solid var(--line);
+}
+.auth__aside-top {
+  display: flex;
+  justify-content: flex-end;
+}
+.auth__quote {
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  max-width: 13ch;
+  text-wrap: balance;
+}
+.auth__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.auth__facts li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.auth__facts svg {
+  color: var(--muted);
+}
+.demo {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  font-size: 13px;
+  color: var(--muted);
+}
+.demo__title {
+  color: var(--ink-2);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.demo__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.demo__list .kbd {
+  margin-right: 6px;
+}
+
+/* --- chybové stránky --- */
+.plain {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px 16px;
+}
+.plain__card {
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.plain__code {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+.plain__title {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.plain__text {
+  color: var(--muted);
+  font-size: 14.5px;
+  margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   Flash hlášky (toast nahoře, schová se sám po 5 s – viz app.js)
+   ========================================================================== */
+.flash-container {
+  position: fixed;
+  top: 18px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 400px;
+  max-width: calc(100% - 32px);
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+.alert__icon {
+  flex: none;
+  display: inline-flex;
+  margin-top: 1px;
+}
+.alert__body {
+  flex: 1;
+  min-width: 0;
+}
+.alert__title {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.alert__description {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.alert--success .alert__icon {
+  color: var(--ok);
+}
+.alert--destructive .alert__icon {
+  color: var(--danger);
+}
+
+/* ==========================================================================
+   Pohyb při načtení – krátké vyjetí obsahu, jen pokud to systém dovolí
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .page > *,
+  .stat {
+    animation: rise 420ms var(--ease-out) both;
+  }
+  .page > :nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .page > :nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .stat:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .stat:nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .stat:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .alert {
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 200ms var(--ease-out);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog,
+  .dialog::backdrop {
+    transition-duration: 0ms;
+  }
+}
+
+/* ==========================================================================
+   Responzivita
+   ========================================================================== */
+.show-sm {
+  display: none;
+}
+@media (max-width: 960px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hide-md {
+    display: none;
+  }
+}
+@media (max-width: 880px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+  .auth__aside {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .header__inner,
+  .subnav__inner {
+    padding: 0 16px;
+  }
+  .page {
+    padding: 28px 16px 56px;
+  }
+  .page__title {
+    font-size: 24px;
+  }
+  .panel {
+    padding: 20px;
+  }
+  .panel--flush {
+    padding: 0;
+  }
+  .grid-2,
+  .facts {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .sidebar-layout__nav {
+    flex-direction: row;
+  }
+  .auth__form-col {
+    padding: 20px 16px;
+  }
+}
+@media (max-width: 600px) {
+  .hide-sm,
+  .userchip,
+  .brand__name {
+    display: none;
+  }
+  .show-sm {
+    display: flex;
+  }
+  .table th:first-child,
+  .table td:first-child {
+    padding-left: 16px;
+  }
+  .table__actions {
+    padding-right: 12px !important;
+  }
+  .filters__select {
+    flex: 1 1 140px;
+  }
+  .stat__value {
+    font-size: 28px;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+  .form-actions .btn {
+    width: 100%;
+  }
+}

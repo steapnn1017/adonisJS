@@ -1,0 +1,19 @@
+{{--
+  Jednoduchý layout pro chybové stránky (404, 500): logo + karta uprostřed.
+  Nesmí sahat na auth.user – chyba může nastat i u nepřihlášeného.
+--}}
+<!DOCTYPE html>
+<html lang="cs" data-theme="{{ currentTheme(request) }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ $props.get('title') }} | Správa uživatelů</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+  </head>
+  <body>
+    <main class="plain">
+      @!logo()
+      <div class="panel plain__card">{{{ await $slots.main() }}}</div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+@layouts.auth({ title: 'Přihlášení' })
+  <h1 class="auth__title">Přihlášení</h1>
+  <p class="auth__sub">Zadej e-mail a heslo ke svému účtu.</p>
+
+  @form({
+    route: 'session.store',
+    method: 'POST',
+    class: 'auth__form',
+    'x-data': '{ submitting: false }',
+    'x-on:submit': 'submitting = true',
+  })
+    @field.root({ name: 'email' })
+      @!field.label({ text: 'E-mail' })
+      @!input.control({ type: 'email', autocomplete: 'username', placeholder: 'ty@firma.cz' })
+      @!field.error()
+    @end
+    @field.root({ name: 'password' })
+      @!field.label({ text: 'Heslo' })
+      @!input.control({ type: 'password', autocomplete: 'current-password' })
+      @!field.error()
+    @end
+    @!button({
+      text: 'Přihlásit se',
+      type: 'submit',
+      block: true,
+      style: 'margin-top: 4px;',
+      'x-bind:disabled': 'submitting',
+      'x-text': "submitting ? 'Přihlašuju…' : 'Přihlásit se'",
+    })
+  @end
+
+  {{-- Testovací účty ze seederu – ukazují se jen při vývoji, v produkci se nevypíšou --}}
+  @if(app.inDev)
+    <div class="demo">
+      <p class="demo__title">Testovací účty, heslo <span class="kbd">heslo1234</span></p>
+      <ul class="demo__list">
+        <li><span class="kbd">admin@test.cz</span> administrátor</li>
+        <li><span class="kbd">uzivatel@test.cz</span> běžný uživatel</li>
+        <li><span class="kbd">blokovany@test.cz</span> zablokovaný účet</li>
+      </ul>
+    </div>
+  @end
+
+  <p class="auth__foot">
+    Ještě nemáš účet?
+    @link({ route: 'new_account.create', class: 'il' })
+      Zaregistruj se
+    @end
+  </p>
+@end

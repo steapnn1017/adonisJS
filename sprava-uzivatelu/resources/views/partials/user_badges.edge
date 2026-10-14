@@ -1,0 +1,5 @@
+{{-- Štítky role a stavu – použité v tabulce na mobilu i ve formuláři úprav --}}
+<span class="badge {{ user.isAdmin ? 'badge--strong' : '' }}">{{ user.isAdmin ? 'Admin' : 'Uživatel' }}</span>
+<span class="status {{ user.isActive ? 'status--on' : 'status--off' }}">
+  {{ user.isActive ? 'Aktivní' : 'Zablokovaný' }}
+</span>

@@ -1,0 +1,25 @@
+@layouts.app({ title: 'Nový uživatel' })
+  @page({ title: 'Nový uživatel', description: 'Založ účet a rovnou mu nastav roli.', narrow: true })
+    @slot('actions')
+      @link({ route: 'users.index', class: 'btn btn--ghost' })
+        @svg('lucide:arrow-left', { width: 15, height: 15 })
+        Zpět na seznam
+      @end
+    @end
+
+    @form({
+      route: 'users.store',
+      class: 'panel form-panel',
+      'x-data': '{ submitting: false }',
+      'x-on:submit': 'submitting = true',
+    })
+      @include('partials/user_form')
+      <div class="form-actions">
+        @link({ route: 'users.index', class: 'btn btn--ghost' })
+          Zrušit
+        @end
+        <button type="submit" class="btn btn--primary" x-bind:disabled="submitting">Vytvořit účet</button>
+      </div>
+    @end
+  @end
+@end

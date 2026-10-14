@@ -1,0 +1,60 @@
+{{--
+  Společná pole pro založení i úpravu uživatele.
+  Proměnná user existuje jen při úpravě – podle ní se mění výchozí hodnoty a texty.
+
+  Výchozí hodnota pole = to, co uživatel odeslal (old), jinak hodnota z DB, jinak default.
+  Old hodnoty existují jen po neúspěšné validaci – poznáme to podle toho, že přišel e-mail.
+--}}
+@let(isEdit = Boolean(user))
+@let(hasOld = old('email') !== undefined)
+@let(currentRole = old('role') || (isEdit ? user.role : 'user'))
+@let(isActiveChecked = hasOld ? Boolean(old('isActive')) : (isEdit ? user.isActive : true))
+
+@section({ title: 'Základní údaje', description: 'Jméno se zobrazuje v aplikaci, e-mail slouží k přihlášení.' })
+  <div class="grid-2">
+    @field.root({ name: 'fullName' })
+      @!field.label({ text: 'Celé jméno' })
+      @!input.control({ value: user?.fullName, autocomplete: 'off', placeholder: 'Jana Nováková' })
+      @!field.error()
+    @end
+    @field.root({ name: 'email' })
+      @!field.label({ text: 'E-mail' })
+      @!input.control({ type: 'email', value: user?.email, autocomplete: 'off', placeholder: 'jana@firma.cz' })
+      @!field.error()
+    @end
+  </div>
+@end
+
+@section({ title: 'Oprávnění', description: 'Administrátor vidí správu uživatelů a může měnit cizí účty.' })
+  @field.root({ name: 'role' })
+    @!field.label({ text: 'Role' })
+    @!select.control({
+      class: 'field__input',
+      options: [
+        { value: 'user', name: 'Uživatel', isSelected: currentRole === 'user' },
+        { value: 'admin', name: 'Administrátor', isSelected: currentRole === 'admin' },
+      ],
+    })
+    @!field.error()
+  @end
+
+  <label class="switch">
+    <input type="checkbox" name="isActive" value="1" class="switch__input" {{ isActiveChecked ? 'checked' : '' }} />
+    <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+    <span class="switch__text">
+      <span class="switch__label">Aktivní účet</span>
+      <span class="field__hint">Vypnuto = účet zůstane, ale nepůjde se přihlásit.</span>
+    </span>
+  </label>
+@end
+
+@section({
+  title: isEdit ? 'Nové heslo' : 'Heslo',
+  description: isEdit ? 'Nech prázdné, pokud heslo měnit nechceš.' : 'Alespoň 8 znaků. Uživatel si ho pak může změnit v nastavení.',
+})
+  @field.root({ name: 'password' })
+    @!field.label({ text: isEdit ? 'Nové heslo' : 'Heslo' })
+    @!input.control({ type: 'password', autocomplete: 'new-password' })
+    @!field.error()
+  @end
+@end

@@ -1,0 +1,188 @@
+{{--
+  Seznam uživatelů. Controller posílá:
+    users      – stránkovaný výsledek (Lucid paginator, jde procházet přes @each)
+    filters    – { q, role, status } z URL, aby formulář zůstal vyplněný
+    hasFilters – true, když je aktivní aspoň jeden filtr
+--}}
+@let(me = auth.user)
+@layouts.app({ title: 'Uživatelé' })
+  @page({
+    title: 'Uživatelé',
+    description: hasFilters ? `Filtru odpovídá ${plural(users.total, "účet", "účty", "účtů")}.` : `Celkem ${plural(users.total, "účet", "účty", "účtů")} v aplikaci.`,
+  })
+    @slot('actions')
+      @link({ route: 'users.create', class: 'btn btn--primary' })
+        @svg('lucide:user-plus', { width: 16, height: 16 })
+        Nový uživatel
+      @end
+    @end
+
+    {{-- GET formulář: filtry se propíšou do URL. Změna selectu formulář rovnou odešle. --}}
+    <form method="GET" action="{{ urlFor('users.index') }}" class="filters" role="search">
+      <label class="search">
+        <span class="sr-only">Hledat podle jména nebo e-mailu</span>
+        @svg('lucide:search', { width: 16, height: 16, class: 'search__icon' })
+        <input
+          type="search"
+          name="q"
+          value="{{ filters.q }}"
+          placeholder="Hledat jméno nebo e-mail"
+          class="field__input search__input"
+          autocomplete="off"
+        />
+      </label>
+      <label class="filters__select">
+        <span class="sr-only">Role</span>
+        <select name="role" class="field__input" x-data x-on:change="$el.form.requestSubmit()">
+          <option value="">Všechny role</option>
+          <option value="admin" {{ filters.role === 'admin' ? 'selected' : '' }}>Administrátoři</option>
+          <option value="user" {{ filters.role === 'user' ? 'selected' : '' }}>Uživatelé</option>
+        </select>
+      </label>
+      <label class="filters__select">
+        <span class="sr-only">Stav</span>
+        <select name="status" class="field__input" x-data x-on:change="$el.form.requestSubmit()">
+          <option value="">Všechny stavy</option>
+          <option value="active" {{ filters.status === 'active' ? 'selected' : '' }}>Aktivní</option>
+          <option value="blocked" {{ filters.status === 'blocked' ? 'selected' : '' }}>Zablokovaní</option>
+        </select>
+      </label>
+      <button type="submit" class="btn btn--secondary">Hledat</button>
+      @if(hasFilters)
+        @link({ route: 'users.index', class: 'btn btn--ghost' })
+          Zrušit filtry
+        @end
+      @end
+    </form>
+
+    @if(users.length)
+      <div class="panel panel--flush" x-data="confirmDelete">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Uživatel</th>
+              <th scope="col" class="hide-sm">Role</th>
+              <th scope="col" class="hide-sm">Stav</th>
+              <th scope="col" class="hide-md">Založen</th>
+              <th scope="col" class="hide-md">Poslední přihlášení</th>
+              <th scope="col"><span class="sr-only">Akce</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @each(user in users)
+              <tr>
+                <td>
+                  <div class="person-cell">
+                    <span class="avatar" aria-hidden="true">{{ user.initials }}</span>
+                    <span class="person">
+                      <span class="person__name">
+                        {{ user.displayName }}
+                        @if(user.id === me.id)
+                          <span class="you">ty</span>
+                        @end
+                      </span>
+                      <span class="person__email">{{ user.email }}</span>
+                      {{-- Na mobilu se sloupce role/stav schovají a ukážou se tady --}}
+                      <span class="person__badges show-sm">
+                        @include('partials/user_badges')
+                      </span>
+                    </span>
+                  </div>
+                </td>
+                <td class="hide-sm">
+                  <span class="badge {{ user.isAdmin ? 'badge--strong' : '' }}">
+                    {{ user.isAdmin ? 'Admin' : 'Uživatel' }}
+                  </span>
+                </td>
+                <td class="hide-sm">
+                  <span class="status {{ user.isActive ? 'status--on' : 'status--off' }}">
+                    {{ user.isActive ? 'Aktivní' : 'Zablokovaný' }}
+                  </span>
+                </td>
+                <td class="hide-md muted">{{ formatDate(user.createdAt) }}</td>
+                <td class="hide-md muted">{{ user.lastLoginAt ? fromNow(user.lastLoginAt) : 'nikdy' }}</td>
+                <td class="table__actions">
+                  @link({
+                    route: 'users.edit',
+                    routeParams: { id: user.id },
+                    class: 'iconbtn',
+                    'aria-label': `Upravit ${user.displayName}`,
+                    title: 'Upravit',
+                  })
+                    @svg('lucide:pencil', { width: 15, height: 15 })
+                  @end
+                  @if(user.id !== me.id)
+                    <button
+                      type="button"
+                      class="iconbtn iconbtn--danger"
+                      aria-label="Smazat {{ user.displayName }}"
+                      title="Smazat"
+                      data-name="{{ user.displayName }}"
+                      data-action="{{ formAttributes('users.destroy', { id: user.id }).action }}"
+                      x-on:click="open($el)"
+                    >
+                      @svg('lucide:trash-2', { width: 15, height: 15 })
+                    </button>
+                  @end
+                </td>
+              </tr>
+            @end
+          </tbody>
+        </table>
+
+        {{-- Jeden sdílený dialog pro všechny řádky – tlačítko mu jen předá jméno a adresu --}}
+        <dialog class="dialog" x-ref="dialog" aria-labelledby="delete-title" x-on:click.self="close()">
+          <form method="POST" x-bind:action="action" class="dialog__body">
+            {{ csrfField() }}
+            <div class="dialog__icon">
+              @svg('lucide:trash-2', { width: 18, height: 18 })
+            </div>
+            <h2 id="delete-title" class="dialog__title">
+              Smazat uživatele <span x-text="name"></span>?
+            </h2>
+            <p class="dialog__text">
+              Účet i jeho data se smažou natrvalo. Pokud chceš jen zabránit přihlášení, stačí účet zablokovat.
+            </p>
+            <div class="dialog__actions">
+              <button type="button" class="btn btn--secondary" x-on:click="close()">Zrušit</button>
+              <button type="submit" class="btn btn--danger">Smazat</button>
+            </div>
+          </form>
+        </dialog>
+      </div>
+
+      @if(users.hasPages)
+        <nav class="pager" aria-label="Stránkování">
+          @if(users.currentPage > 1)
+            <a class="btn btn--secondary btn--sm" href="{{ users.getPreviousPageUrl() }}" rel="prev">
+              @svg('lucide:chevron-left', { width: 15, height: 15 })
+              Předchozí
+            </a>
+          @else
+            <span></span>
+          @end
+          <span class="pager__info">Strana {{ users.currentPage }} z {{ users.lastPage }}</span>
+          @if(users.hasMorePages)
+            <a class="btn btn--secondary btn--sm" href="{{ users.getNextPageUrl() }}" rel="next">
+              Další
+              @svg('lucide:chevron-right', { width: 15, height: 15 })
+            </a>
+          @else
+            <span></span>
+          @end
+        </nav>
+      @end
+    @else
+      <div class="panel empty">
+        <div class="empty__mark">
+          @svg('lucide:search-x', { width: 22, height: 22 })
+        </div>
+        <h2>Nikoho jsme nenašli</h2>
+        <p>Zkus jiné hledání nebo zruš filtry.</p>
+        @link({ route: 'users.index', class: 'btn btn--secondary' })
+          Zrušit filtry
+        @end
+      </div>
+    @end
+  @end
+@end

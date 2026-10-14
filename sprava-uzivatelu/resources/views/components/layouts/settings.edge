@@ -1,0 +1,23 @@
+{{--
+  Sekce nastavení: vlevo menu, vpravo obsah stránky.
+  Nová stránka nastavení = nová routa + položka v poli items.
+--}}
+@let(items = [
+  { label: 'Profil', route: 'profile.edit', icon: 'lucide:user-round' },
+  { label: 'Heslo', route: 'password.edit', icon: 'lucide:key-round' },
+])
+@layouts.app({ title: $props.get('title') ?? 'Nastavení' })
+  @page({ title: 'Nastavení', description: 'Tvůj účet a přihlašovací údaje.' })
+    <div class="sidebar-layout">
+      <nav class="sidebar-layout__nav" aria-label="Nastavení">
+        @each(item in items)
+          @navLink({ route: item.route, exact: true, class: 'sidebar-layout__item' })
+            @svg(item.icon, { width: 16, height: 16 })
+            {{ item.label }}
+          @end
+        @end
+      </nav>
+      <div class="sidebar-layout__content panel">{{{ await $slots.main() }}}</div>
+    </div>
+  @end
+@end

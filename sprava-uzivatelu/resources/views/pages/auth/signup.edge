@@ -1,0 +1,49 @@
+@layouts.auth({ title: 'Registrace' })
+  <h1 class="auth__title">Nový účet</h1>
+  <p class="auth__sub">Po registraci máš roli uživatele. Admin ti ji může změnit.</p>
+
+  @form({
+    route: 'new_account.store',
+    method: 'POST',
+    class: 'auth__form',
+    'x-data': '{ submitting: false }',
+    'x-on:submit': 'submitting = true',
+  })
+    @field.root({ name: 'fullName' })
+      @!field.label({ text: 'Celé jméno' })
+      @!input.control({ autocomplete: 'name', placeholder: 'Jana Nováková' })
+      @!field.error()
+    @end
+    @field.root({ name: 'email' })
+      @!field.label({ text: 'E-mail' })
+      @!input.control({ type: 'email', autocomplete: 'email', placeholder: 'ty@firma.cz' })
+      @!field.error()
+    @end
+    @field.root({ name: 'password' })
+      @!field.label({ text: 'Heslo' })
+      @!input.control({ type: 'password', autocomplete: 'new-password' })
+      <span class="field__hint">Alespoň 8 znaků.</span>
+      @!field.error()
+    @end
+    @field.root({ name: 'passwordConfirmation' })
+      @!field.label({ text: 'Heslo znovu' })
+      @!input.control({ type: 'password', autocomplete: 'new-password' })
+      @!field.error()
+    @end
+    @!button({
+      text: 'Vytvořit účet',
+      type: 'submit',
+      block: true,
+      style: 'margin-top: 4px;',
+      'x-bind:disabled': 'submitting',
+      'x-text': "submitting ? 'Zakládám účet…' : 'Vytvořit účet'",
+    })
+  @end
+
+  <p class="auth__foot">
+    Už účet máš?
+    @link({ route: 'session.create', class: 'il' })
+      Přihlas se
+    @end
+  </p>
+@end
