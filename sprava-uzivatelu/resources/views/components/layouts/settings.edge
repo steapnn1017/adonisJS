@@ -1,22 +1,36 @@
 {{--
-  Sekce nastavení: vlevo menu, vpravo obsah stránky.
-  Nová stránka nastavení = nová routa + položka v poli items.
+  LAYOUT SEKCE NASTAVENÍ
+  Uvnitř hlavního layoutu (layouts.app): vlevo menu nastavení, vpravo obsah.
+
+  Použití:
+    @layouts.settings({ title: 'Profil' })
+      ... formulář ...
+    @end
+
+  Nová stránka nastavení = nová routa v start/routes.ts + nový řádek v items.
 --}}
 @let(items = [
   { label: 'Profil', route: 'profile.edit', icon: 'lucide:user-round' },
   { label: 'Heslo', route: 'password.edit', icon: 'lucide:key-round' },
 ])
-@layouts.app({ title: $props.get('title') ?? 'Nastavení' })
+
+{{-- Layout uvnitř layoutu: celé nastavení se zabalí do hlavního layoutu aplikace --}}
+@layouts.app({ title: $props.get('title') })
   @page({ title: 'Nastavení', description: 'Tvůj účet a přihlašovací údaje.' })
     <div class="sidebar-layout">
+      {{-- Menu vlevo (na mobilu nahoře vedle sebe) --}}
       <nav class="sidebar-layout__nav" aria-label="Nastavení">
         @each(item in items)
-          @navLink({ route: item.route, exact: true, class: 'sidebar-layout__item' })
+          @let(href = urlFor(item.route))
+          {{-- Aktivní položka = adresa stránky je přesně adresa odkazu --}}
+          <a href="{{ href }}" class="sidebar-layout__item" aria-current="{{ request.url() === href ? 'page' : 'false' }}">
             @svg(item.icon, { width: 16, height: 16 })
             {{ item.label }}
-          @end
+          </a>
         @end
       </nav>
+
+      {{-- Obsah konkrétní stránky nastavení --}}
       <div class="sidebar-layout__content panel">{{{ await $slots.main() }}}</div>
     </div>
   @end

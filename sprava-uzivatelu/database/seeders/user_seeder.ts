@@ -1,25 +1,37 @@
+/*
+|--------------------------------------------------------------------------
+| SEEDER: testovací uživatelé
+|--------------------------------------------------------------------------
+|
+| Seeder naplní databázi ukázkovými daty, aby aplikace nebyla prázdná.
+| Spuštění: node ace db:seed
+|
+| Všechny účty mají heslo „heslo1234“. Důležité účty na vyzkoušení:
+|   admin@test.cz      – administrátor
+|   uzivatel@test.cz   – běžný uživatel
+|   blokovany@test.cz  – zablokovaný účet (nepřihlásí se)
+|
+| Seeder jde pouštět opakovaně: updateOrCreateMany podle e-mailu
+| existující účet jen aktualizuje a nevytvoří duplicitu.
+|
+*/
+
 import User from '#models/user'
 import { DateTime } from 'luxon'
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 
-/**
- * Testovací data. Spuštění: node ace db:seed
- * Seeder je idempotentní – updateOrCreateMany podle e-mailu, takže ho jde pouštět opakovaně
- * bez duplicit. Všechny účty mají heslo "heslo1234".
- *
- * Data jsou relativní k dnešku (daysAgo), aby statistika "noví za 7 dní"
- * dávala smysl, ať se seeder spustí kdykoli.
- */
 const PASSWORD = 'heslo1234'
 
-const people: Array<{
-  fullName: string
-  email: string
-  role?: 'admin' | 'user'
-  isActive?: boolean
-  daysAgo: number
-  lastLoginDaysAgo?: number
-}> = [
+/**
+ * Seznam lidí. Data jsou zadaná RELATIVNĚ k dnešku (před kolika dny),
+ * aby statistika „noví za 7 dní“ dávala smysl, ať se seeder spustí kdykoli.
+ *
+ *   daysAgo          – před kolika dny byl účet založen
+ *   lastLoginDaysAgo – před kolika dny se naposledy přihlásil (chybí = nikdy)
+ *   role             – chybí = 'user'
+ *   isActive         – chybí = true (aktivní)
+ */
+const people = [
   {
     fullName: 'Jana Nováková',
     email: 'admin@test.cz',
@@ -68,17 +80,20 @@ export default class extends BaseSeeder {
   async run() {
     const now = DateTime.now()
 
-    await User.updateOrCreateMany(
-      'email',
-      people.map(({ daysAgo, lastLoginDaysAgo, role = 'user', isActive = true, ...person }) => ({
-        ...person,
-        role,
-        isActive,
-        password: PASSWORD,
-        createdAt: now.minus({ days: daysAgo, hours: daysAgo % 5 }),
-        lastLoginAt:
-          lastLoginDaysAgo === undefined ? null : now.minus({ days: lastLoginDaysAgo, hours: 3 }),
-      }))
-    )
+    // Z každého člověka v seznamu udělá řádek pro databázi
+    const rows = people.map((person) => ({
+      fullName: person.fullName,
+      email: person.email,
+      password: PASSWORD,
+      role: person.role ?? 'user',
+      isActive: person.isActive ?? true,
+      // now.minus({ days: 3 }) = datum před 3 dny
+      createdAt: now.minus({ days: person.daysAgo }),
+      lastLoginAt:
+        person.lastLoginDaysAgo === undefined ? null : now.minus({ days: person.lastLoginDaysAgo }),
+    }))
+
+    // Najde podle e-mailu: existuje → aktualizuje, neexistuje → vytvoří
+    await User.updateOrCreateMany('email', rows)
   }
 }

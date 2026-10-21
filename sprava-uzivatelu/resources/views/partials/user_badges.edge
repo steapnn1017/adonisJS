@@ -1,5 +1,14 @@
-{{-- Štítky role a stavu – použité v tabulce na mobilu i ve formuláři úprav --}}
-<span class="badge {{ user.isAdmin ? 'badge--strong' : '' }}">{{ user.isAdmin ? 'Admin' : 'Uživatel' }}</span>
+{{--
+  ŠTÍTKY ROLE A STAVU jednoho uživatele: „Admin / Uživatel“ a „Aktivní / Zablokovaný“.
+  Používá se v seznamu uživatelů dvakrát: ve sloupci tabulky (počítač)
+  a pod e-mailem (mobil, kde se sloupec schová).
+
+  Vkládá se přes @include('partials/user_badges') a čte proměnnou „user“
+  z místa, kam se vkládá (v seznamu je to aktuální řádek z @each).
+--}}
+<span class="badge {{ user.isAdmin ? 'badge--strong' : '' }}">
+  {{ user.isAdmin ? 'Admin' : 'Uživatel' }}
+</span>
 <span class="status {{ user.isActive ? 'status--on' : 'status--off' }}">
   {{ user.isActive ? 'Aktivní' : 'Zablokovaný' }}
 </span>

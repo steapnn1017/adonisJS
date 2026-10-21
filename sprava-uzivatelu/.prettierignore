@@ -1,6 +1,0 @@
-.adonisjs
-node_modules
-build
-
-# generuje Lucid po každé migraci (node ace migration:run)
-database/schema.ts

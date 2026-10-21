@@ -1,0 +1,80 @@
+{{--
+  STRÁNKA: PŘIHLÁŠENÍ  (adresa /login)
+  Renderuje: SessionController.create()  (app/controllers/session_controller.ts)
+  Formulář odesílá na: POST /login → SessionController.store()
+
+  Je to jediná stránka pro nepřihlášené, proto má celé HTML přímo tady
+  (ostatní stránky ho dostávají z layouts/app.edge).
+  Vlevo formulář, vpravo krátký popis aplikace (na mobilu se schová).
+--}}
+<!DOCTYPE html>
+{{-- data-theme podle cookie, CSS podle něj přepne barvy (viz start/view.ts) --}}
+<html lang="cs" data-theme="{{ currentTheme(request) }}">
+  @!head({ title: 'Přihlášení' })
+  <body>
+    <div class="auth">
+      {{-- Levý sloupec: logo nahoře, formulář uprostřed --}}
+      <div class="auth__form-col">
+        @!logo()
+
+        <div class="auth__form-wrap">
+          <h1 class="auth__title">Přihlášení</h1>
+          <p class="auth__sub">Zadej e-mail a heslo ke svému účtu.</p>
+
+          {{-- urlFor('login.store') = adresa routy s tímhle jménem (/login) --}}
+          <form method="POST" action="{{ urlFor('login.store') }}" class="auth__form">
+            {{-- Skrytý bezpečnostní token, bez něj server formulář odmítne (CSRF ochrana) --}}
+            {{ csrfField() }}
+
+            @!field({ name: 'email', label: 'E-mail', type: 'email', autocomplete: 'username', placeholder: 'ty@firma.cz' })
+            @!field({ name: 'password', label: 'Heslo', type: 'password', autocomplete: 'current-password' })
+
+            <button type="submit" class="btn btn--primary btn--block">Přihlásit se</button>
+          </form>
+
+          {{--
+            Testovací účty ze seederu (database/seeders/user_seeder.ts).
+            app.inDev = jen při vývoji, na produkci se tenhle box nevypíše.
+          --}}
+          @if(app.inDev)
+            <div class="demo">
+              <p class="demo__title">Testovací účty, heslo <span class="kbd">heslo1234</span></p>
+              <ul class="demo__list">
+                <li><span class="kbd">admin@test.cz</span> administrátor</li>
+                <li><span class="kbd">uzivatel@test.cz</span> běžný uživatel</li>
+                <li><span class="kbd">blokovany@test.cz</span> zablokovaný účet</li>
+              </ul>
+            </div>
+          @end
+        </div>
+      </div>
+
+      {{-- Pravý sloupec: co aplikace umí --}}
+      <aside class="auth__aside">
+        <div class="auth__aside-top">
+          @!themeToggle()
+        </div>
+
+        <p class="auth__quote">Účty, role a přístupy na jednom místě.</p>
+
+        <ul class="auth__facts">
+          <li>
+            @svg('lucide:shield-check', { width: 16, height: 16 })
+            Admin zakládá, upravuje a blokuje účty
+          </li>
+          <li>
+            @svg('lucide:search', { width: 16, height: 16 })
+            Hledání a filtry podle role a stavu
+          </li>
+          <li>
+            @svg('lucide:lock', { width: 16, height: 16 })
+            Zablokovaný účet se nepřihlásí
+          </li>
+        </ul>
+      </aside>
+    </div>
+
+    {{-- Chybová hláška, např. „Nesprávný e-mail nebo heslo.“ --}}
+    @include('partials/flash_alerts')
+  </body>
+</html>

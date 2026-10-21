@@ -1,27 +1,18 @@
 /*
 |--------------------------------------------------------------------------
-| JavaScript entrypoint for running ace commands
+| SPOUŠTĚČ PŘÍKAZŮ `node ace ...`
 |--------------------------------------------------------------------------
 |
-| DO NOT MODIFY THIS FILE AS IT WILL BE OVERRIDDEN DURING THE BUILD
-| PROCESS.
+| NEUPRAVOVAT – AdonisJS tenhle soubor při buildu přepisuje.
 |
-| See docs.adonisjs.com/guides/typescript-build-process#creating-production-build
-|
-| Since, we cannot run TypeScript source code using "node" binary, we need
-| a JavaScript entrypoint to run ace commands.
-|
-| This file registers the "ts-node/esm" hook with the Node.js module system
-| and then imports the "bin/console.ts" file.
+| Node.js sám neumí spustit TypeScript. Tenhle malý JavaScriptový soubor
+| proto nejdřív zapne překlad TypeScriptu za běhu (@poppinss/ts-exec)
+| a pak spustí skutečný vstupní bod bin/console.ts.
 |
 */
 
-/**
- * Register hook to process TypeScript files using ts-node
- */
+// Zapne spouštění .ts souborů přímo v Node.js
 import '@poppinss/ts-exec'
 
-/**
- * Import ace console entrypoint
- */
+// Spustí příkazovou řádku ace (bin/console.ts, po překladu .js)
 await import('./bin/console.js')

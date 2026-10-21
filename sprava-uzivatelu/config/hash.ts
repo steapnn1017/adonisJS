@@ -1,64 +1,35 @@
+/*
+|--------------------------------------------------------------------------
+| HASHOVÁNÍ HESEL
+|--------------------------------------------------------------------------
+|
+| Hesla se do databáze nikdy neukládají čitelně, ale jako „hash“:
+| jednosměrný otisk, ze kterého heslo nejde zpátky zjistit.
+| Při přihlášení se zadané heslo zahashuje znovu a porovnají se otisky.
+|
+| Hashuje se samo při user.save() (díky withAuthFinder v app/models/user.ts).
+|
+*/
+
 import { defineConfig, drivers } from '@adonisjs/core/hash'
 
-/**
- * Hashing configuration.
- *
- * This starter uses Node.js scrypt under the hood.
- * Node.js reference: https://nodejs.org/api/crypto.html#cryptoscryptpassword-salt-keylen-options-callback
- */
 const hashConfig = defineConfig({
-  /**
-   * Default hasher used by the application.
-   */
   default: 'scrypt',
 
   list: {
     /**
-     * Scrypt is memory-hard, which makes brute-force attacks more expensive.
+     * Scrypt je záměrně pomalý a náročný na paměť. Pro uživatele je
+     * to pár milisekund, ale útočník, který zkouší miliony hesel,
+     * by čekal neúnosně dlouho.
      */
     scrypt: drivers.scrypt({
-      /**
-       * Work factor (Node alias: N / cost).
-       * Higher values increase security and CPU+memory usage.
-       *
-       * Tuning guideline:
-       * - Start with 16384.
-       * - Increase gradually (for example 32768) and benchmark login/signup latency.
-       * - Keep values practical for your slowest production machine.
-       *
-       * Node constraint: value must be a power of two greater than 1.
-       */
+      // Hlavní „obtížnost“ (musí být mocnina 2). Vyšší = bezpečnější, ale pomalejší.
       cost: 16384,
-
-      /**
-       * Block size (Node alias: r / blockSize).
-       * Increases memory and CPU linearly.
-       *
-       * Tuning guideline:
-       * - Keep 8 unless you have a measured reason to change it.
-       * - Raise only with benchmark data, because memory usage grows quickly.
-       */
+      // Kolik paměti jeden výpočet zabere (lineárně). Doporučeno nechat 8.
       blockSize: 8,
-
-      /**
-       * Parallelization (Node alias: p / parallelization).
-       * Controls how many independent computations are performed.
-       *
-       * Tuning guideline:
-       * - Keep 1 for most applications.
-       * - Increase only after load testing if your infrastructure benefits from it.
-       */
+      // Kolik výpočtů běží souběžně. Doporučeno nechat 1.
       parallelization: 1,
-
-      /**
-       * Maximum memory limit in bytes (Node alias: maxmem / maxMemory).
-       * Hashing throws if the estimated memory usage is above this limit.
-       * Node documents the check as approximately: 128 * N * r > maxmem.
-       *
-       * Tuning guideline:
-       * - Keep this aligned with your cost/blockSize choices.
-       * - Increase carefully on memory-constrained environments.
-       */
+      // Pojistka: maximální paměť na jeden výpočet v bajtech (32 MB)
       maxMemory: 33554432,
     }),
   },
@@ -67,8 +38,7 @@ const hashConfig = defineConfig({
 export default hashConfig
 
 /**
- * Inferring types for the list of hashers you have configured
- * in your application.
+ * Jen pro TypeScript (napovídání v editoru), na chod aplikace nemá vliv.
  */
 declare module '@adonisjs/core/types' {
   export interface HashersList extends InferHashers<typeof hashConfig> {}

@@ -1,57 +1,91 @@
 {{--
-  Layout pro přihlášené. Položky navigace: každá má route a ikonu,
-  "adminOnly" se zobrazí jen administrátorům (přístup ale hlídá middleware, ne tohle).
+  LAYOUT PRO PŘIHLÁŠENÉ
+  Obal každé stránky po přihlášení: horní lišta (logo, jméno, přepínač
+  motivu, odhlášení), pod ní navigace a pod ní obsah konkrétní stránky.
+
+  Použití ve stránce:
+    @layouts.app({ title: 'Přehled' })
+      ... obsah stránky ...
+    @end
+
+  Parametry:
+    title – název do záložky prohlížeče
+--}}
+
+{{--
+  Položky navigace. Nová položka = nový řádek tady.
+    label     – text odkazu
+    route     – jméno routy ze start/routes.ts, kam odkaz vede
+    prefix    – položka svítí, když adresa začíná tímhle textem
+                (proto „Uživatelé“ svítí i na /users/5/edit)
+    icon      – ikona z https://lucide.dev/icons
+    adminOnly – ukáže se jen adminům. Přístup ale skutečně hlídá
+                middleware admin, skrytí odkazu je jen kosmetika.
 --}}
 @let(nav = [
-  { label: 'Přehled', route: 'dashboard', icon: 'lucide:layout-grid' },
-  { label: 'Uživatelé', route: 'users.index', icon: 'lucide:users', adminOnly: true },
-  { label: 'Nastavení', route: 'profile.edit', icon: 'lucide:settings-2', matchPrefix: '/settings' },
+  { label: 'Přehled', route: 'dashboard', prefix: '/dashboard', icon: 'lucide:layout-grid' },
+  { label: 'Uživatelé', route: 'users.index', prefix: '/users', icon: 'lucide:users', adminOnly: true },
+  { label: 'Nastavení', route: 'profile.edit', prefix: '/settings', icon: 'lucide:settings-2' },
 ])
-@let(pageTitle = $props.get('title'))
+
+{{-- auth.user = přihlášený uživatel (připravil ho middleware auth) --}}
 @let(me = auth.user)
+
 <!DOCTYPE html>
+{{-- data-theme podle cookie, CSS podle něj přepne barvy (viz start/view.ts) --}}
 <html lang="cs" data-theme="{{ currentTheme(request) }}">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ pageTitle ? `${pageTitle} | Správa uživatelů` : 'Správa uživatelů' }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('dumper')
-  </head>
+  @!head({ title: $props.get('title') })
   <body>
-    <header class="header header--bar">
+    {{-- Horní lišta --}}
+    <header class="header">
       <div class="header__inner">
         @!logo()
+
         <div class="header__right">
+          {{-- Kdo je přihlášený: kolečko s iniciálami + jméno --}}
           <span class="userchip">
             <span class="avatar avatar--sm" aria-hidden="true">{{ me.initials }}</span>
             <span class="userchip__name">{{ me.displayName }}</span>
           </span>
+
           @!themeToggle()
-          @form({ route: 'session.destroy', method: 'POST' })
+
+          {{--
+            Odhlášení je formulář s metodou POST, ne obyčejný odkaz.
+            csrfField() vloží skrytý bezpečnostní token (viz config/shield.ts).
+          --}}
+          <form method="POST" action="{{ urlFor('logout') }}">
+            {{ csrfField() }}
             <button type="submit" class="btn btn--secondary btn--sm">
               @svg('lucide:log-out', { width: 15, height: 15 })
+              {{-- hide-sm = na mobilu jen ikona, text se schová --}}
               <span class="hide-sm">Odhlásit</span>
             </button>
-          @end
+          </form>
         </div>
       </div>
     </header>
 
+    {{-- Navigace pod lištou --}}
     <nav class="subnav" aria-label="Hlavní navigace">
       <div class="subnav__inner">
         @each(item in nav)
           @if(!item.adminOnly || me.isAdmin)
-            @navLink({ route: item.route, matchPrefix: item.matchPrefix, class: 'subnav__item' })
+            {{-- aria-current="page" = „tady právě jsi“, CSS podle toho položku podtrhne --}}
+            @let(isActive = request.url().startsWith(item.prefix))
+            <a href="{{ urlFor(item.route) }}" class="subnav__item" aria-current="{{ isActive ? 'page' : 'false' }}">
               @svg(item.icon, { width: 15, height: 15 })
               {{ item.label }}
-            @end
+            </a>
           @end
         @end
       </div>
     </nav>
 
+    {{-- Sem se vloží obsah konkrétní stránky (všechno mezi @layouts.app a @end) --}}
     <main class="app-main">{{{ await $slots.main() }}}</main>
+
+    {{-- Zelená/červená hláška nahoře („Změny byly uloženy.“) --}}
     @include('partials/flash_alerts')
   </body>
 </html>

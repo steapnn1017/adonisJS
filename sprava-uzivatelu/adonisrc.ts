@@ -1,114 +1,58 @@
-import { indexEntities } from '@adonisjs/core/generators'
+/*
+|--------------------------------------------------------------------------
+| HLAVNÍ NASTAVENÍ AdonisJS (adonisrc = „AdonisJS run commands“)
+|--------------------------------------------------------------------------
+|
+| Říká frameworku, co má při startu načíst: balíčky (providers),
+| soubory ze start/ (preloads) a příkazy pro `node ace`.
+|
+*/
+
 import { defineConfig } from '@adonisjs/core/app'
 
 export default defineConfig({
-  /*
-  |--------------------------------------------------------------------------
-  | Experimental flags
-  |--------------------------------------------------------------------------
-  |
-  | The following features will be enabled by default in the next major release
-  | of AdonisJS. You can opt into them today to avoid any breaking changes
-  | during upgrade.
-  |
-  */
+  // Pokusné funkce budoucích verzí AdonisJS – žádné nezapínáme
   experimental: {},
 
-  /*
-  |--------------------------------------------------------------------------
-  | Commands
-  |--------------------------------------------------------------------------
-  |
-  | List of ace commands to register from packages. The application commands
-  | will be scanned automatically from the "./commands" directory.
-  |
-  */
-  commands: [
-    () => import('@adonisjs/core/commands'),
-    () => import('@adonisjs/lucid/commands'),
-    () => import('@adonisjs/session/commands'),
-  ],
+  /**
+   * Příkazy pro `node ace ...` z nainstalovaných balíčků
+   *   core  = serve (npm run dev), build, list:routes, generate:key…
+   *   lucid = migration:run, migration:fresh, db:seed…
+   */
+  commands: [() => import('@adonisjs/core/commands'), () => import('@adonisjs/lucid/commands')],
 
-  /*
-  |--------------------------------------------------------------------------
-  | Service providers
-  |--------------------------------------------------------------------------
-  |
-  | List of service providers to import and register when booting the
-  | application
-  |
-  */
+  /**
+   * Providers = balíčky, které se při startu zapojí do aplikace.
+   * Každý přidá jednu schopnost.
+   */
   providers: [
-    () => import('@adonisjs/core/providers/app_provider'),
-    () => import('@adonisjs/core/providers/hash_provider'),
-    {
-      file: () => import('@adonisjs/core/providers/repl_provider'),
-      environment: ['repl', 'test'],
-    },
-    () => import('@adonisjs/core/providers/vinejs_provider'),
-    () => import('@adonisjs/core/providers/edge_provider'),
-    () => import('@adonisjs/session/session_provider'),
-    () => import('@adonisjs/vite/vite_provider'),
-    () => import('@adonisjs/shield/shield_provider'),
-    () => import('@adonisjs/static/static_provider'),
-    () => import('@adonisjs/lucid/database_provider'),
-    () => import('@adonisjs/auth/auth_provider'),
+    () => import('@adonisjs/core/providers/app_provider'), // základ aplikace
+    () => import('@adonisjs/core/providers/hash_provider'), // hashování hesel
+    () => import('@adonisjs/core/providers/vinejs_provider'), // validace formulářů
+    () => import('@adonisjs/core/providers/edge_provider'), // šablony .edge
+    () => import('@adonisjs/session/session_provider'), // session a flash hlášky
+    () => import('@adonisjs/vite/vite_provider'), // CSS a JS přes Vite
+    () => import('@adonisjs/shield/shield_provider'), // CSRF a bezpečnostní hlavičky
+    () => import('@adonisjs/static/static_provider'), // soubory z public/ (po buildu), výchozí nastavení stačí, proto nemá config
+    () => import('@adonisjs/lucid/database_provider'), // databáze a modely
+    () => import('@adonisjs/auth/auth_provider'), // přihlašování
   ],
 
-  /*
-  |--------------------------------------------------------------------------
-  | Preloads
-  |--------------------------------------------------------------------------
-  |
-  | List of modules to import before starting the application.
-  |
-  */
+  /**
+   * Preloads = soubory ze start/, které se načtou hned při startu.
+   */
   preloads: [
-    () => import('#start/routes'),
-    () => import('#start/kernel'),
-    () => import('#start/validator'),
-    () => import('#start/view'),
+    () => import('#start/routes'), // adresy aplikace
+    () => import('#start/kernel'), // middleware
+    () => import('#start/validator'), // české hlášky validace
+    () => import('#start/view'), // pomocné funkce pro šablony
   ],
 
-  /*
-  |--------------------------------------------------------------------------
-  | Tests
-  |--------------------------------------------------------------------------
-  |
-  | List of test suites to organize tests by their type. Feel free to remove
-  | and add additional suites.
-  |
-  */
-  tests: {
-    suites: [
-      {
-        files: ['tests/unit/**/*.spec.ts'],
-        name: 'unit',
-        timeout: 2000,
-      },
-      {
-        files: ['tests/functional/**/*.spec.ts'],
-        name: 'functional',
-        timeout: 30000,
-      },
-      {
-        files: ['tests/browser/**/*.spec.ts'],
-        name: 'browser',
-        timeout: 300000,
-      },
-    ],
-    forceExit: false,
-  },
-
-  /*
-  |--------------------------------------------------------------------------
-  | Meta files
-  |--------------------------------------------------------------------------
-  |
-  | A collection of files you want to copy to the build folder when creating
-  | a production build.
-  |
-  */
+  /**
+   * Soubory, které nejsou TypeScript, ale musí se zkopírovat
+   * do složky build/ při `npm run build` (šablony a public/).
+   * reloadServer: false = při jejich změně se dev server nerestartuje.
+   */
   metaFiles: [
     {
       pattern: 'resources/views/**/*.edge',
@@ -120,19 +64,10 @@ export default defineConfig({
     },
   ],
 
-  /*
-  |--------------------------------------------------------------------------
-  | Hooks
-  |--------------------------------------------------------------------------
-  |
-  | Assembler hooks are executed by the Assembler dev tool during various
-  | stages. Assembler is responsible for running the dev-server, tests, and
-  | creating production builds. These hooks run in a separate process than
-  | the main AdonisJS app.
-  |
-  */
+  /**
+   * Při `npm run build` nejdřív zkompiluj CSS a JS přes Vite.
+   */
   hooks: {
-    init: [indexEntities()],
     buildStarting: [() => import('@adonisjs/vite/build_hook')],
   },
 })

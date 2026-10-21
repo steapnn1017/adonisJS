@@ -1,0 +1,62 @@
+{{--
+  JEDNO POLE FORMULÁŘE: popisek, políčko a chybová hláška pod ním.
+
+  Použití:
+    @!field({ name: 'email', label: 'E-mail', type: 'email' })
+    @!field({ name: 'fullName', label: 'Celé jméno', value: user.fullName })
+
+  Parametry:
+    name         – název pole. Pod tímhle jménem přijde hodnota do controlleru
+                   a pod tímhle jménem hledáme i chybu z validace.
+    label        – text popisku nad políčkem
+    type         – text (výchozí), email, password…
+    value        – výchozí hodnota, např. jméno z databáze při úpravě (nepovinné)
+    hint         – šedá nápověda pod políčkem (nepovinné)
+    autocomplete – co má prohlížeč nabídnout k doplnění (nepovinné)
+    placeholder  – šedý ukázkový text v prázdném políčku (nepovinné)
+--}}
+@let(name = $props.get('name'))
+@let(type = $props.get('type') || 'text')
+
+{{--
+  Chyby validace. Když formulář neprojde validátorem, AdonisJS přesměruje
+  zpět a chyby uloží do session pod klíčem „inputErrorsBag“ ve tvaru
+  { email: ['Zadej platnou e-mailovou adresu.'] }. Vezmeme chyby tohoto pole.
+--}}
+@let(errors = flashMessages.get('inputErrorsBag', {})[name])
+
+{{--
+  Hodnota v políčku:
+    1. old(name) = co uživatel napsal před neúspěšným odesláním
+       (ať nemusí všechno psát znovu)
+    2. jinak value z parametru (např. z databáze)
+    3. jinak prázdné
+  Heslo se do HTML nikdy nevrací, z bezpečnostních důvodů.
+--}}
+@let(value = type === 'password' ? '' : (old(name) ?? $props.get('value') ?? ''))
+
+<div class="field">
+  {{-- for="..." propojí popisek s políčkem: klik na popisek = klik do políčka --}}
+  <label for="{{ name }}" class="field__label">{{ $props.get('label') }}</label>
+
+  {{-- aria-invalid: čtečky obrazovky ohlásí chybu a CSS orámuje pole červeně --}}
+  <input
+    id="{{ name }}"
+    name="{{ name }}"
+    type="{{ type }}"
+    value="{{ value }}"
+    class="field__input"
+    autocomplete="{{ $props.get('autocomplete') || 'off' }}"
+    placeholder="{{ $props.get('placeholder') || '' }}"
+    aria-invalid="{{ errors ? 'true' : 'false' }}"
+  />
+
+  @if($props.get('hint'))
+    <span class="field__hint">{{ $props.get('hint') }}</span>
+  @end
+
+  {{-- Chybová hláška pod polem (jen když nějaká je) --}}
+  @if(errors)
+    <span class="field__error">{{ errors.join(' ') }}</span>
+  @end
+</div>

@@ -1,120 +1,48 @@
+/*
+|--------------------------------------------------------------------------
+| NASTAVENÍ DATABÁZE
+|--------------------------------------------------------------------------
+|
+| Aplikace používá SQLite: celá databáze je jeden soubor tmp/db.sqlite3.
+| Není potřeba instalovat žádný databázový server.
+|
+*/
+
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/lucid'
 
-const dbConfig = defineConfig({
-  /**
-   * Default connection used for all queries.
-   */
+export default defineConfig({
+  // Které připojení se použije (je jen jedno)
   connection: 'sqlite',
 
-  /**
-   * Pretty-print SQL debug output in development logs.
-   */
+  // SQL dotazy v terminálu hezky naformátované (jen při vývoji, viz debug níže)
   prettyPrintDebugQueries: true,
 
   connections: {
-    /**
-     * SQLite connection (default).
-     */
     sqlite: {
+      // Ovladač pro SQLite v Node.js
       client: 'better-sqlite3',
       connection: {
-        // Testy mají vlastní soubor, aby nikdy nesmazaly nebo nepřepsaly data z vývoje
-        filename: app.tmpPath(app.inTest ? 'db.test.sqlite3' : 'db.sqlite3'),
+        // app.tmpPath() = cesta do složky tmp/ v projektu
+        filename: app.tmpPath('db.sqlite3'),
       },
+      // SQLite neumí výchozí hodnoty jako ostatní databáze, tohle je povinné
       useNullAsDefault: true,
+
       migrations: {
+        // Řadit migrace podle čísla v názvu „přirozeně“ (2 před 10)
         naturalSort: true,
+        // Kde migrace leží
         paths: ['database/migrations'],
       },
+
+      // Po každé migraci vygenerovat database/schema.ts (sloupce pro model User)
       schemaGeneration: {
         enabled: true,
-        rulesPaths: ['./database/schema_rules.js'],
       },
-      /**
-       * Emit SQL queries to the logger in development.
-       */
+
+      // Při vývoji vypisovat každý SQL dotaz do terminálu
       debug: app.inDev,
     },
-
-    /**
-     * PostgreSQL connection.
-     * Install package to switch: npm install pg
-     */
-    // pg: {
-    //   client: 'pg',
-    //   connection: {
-    //     host: env.get('DB_HOST'),
-    //     port: env.get('DB_PORT'),
-    //     user: env.get('DB_USER'),
-    //     password: env.get('DB_PASSWORD'),
-    //     database: env.get('DB_DATABASE'),
-    //   },
-    //   migrations: {
-    //     naturalSort: true,
-    //     paths: ['database/migrations'],
-    //   },
-    //   debug: app.inDev,
-    // },
-
-    /**
-     * MySQL / MariaDB connection.
-     * Install package to switch: npm install mysql2
-     */
-    // mysql: {
-    //   client: 'mysql2',
-    //   connection: {
-    //     host: env.get('DB_HOST'),
-    //     port: env.get('DB_PORT'),
-    //     user: env.get('DB_USER'),
-    //     password: env.get('DB_PASSWORD'),
-    //     database: env.get('DB_DATABASE'),
-    //   },
-    //   migrations: {
-    //     naturalSort: true,
-    //     paths: ['database/migrations'],
-    //   },
-    //   debug: app.inDev,
-    // },
-
-    /**
-     * Microsoft SQL Server connection.
-     * Install package to switch: npm install tedious
-     */
-    // mssql: {
-    //   client: 'mssql',
-    //   connection: {
-    //     server: env.get('DB_HOST'),
-    //     port: env.get('DB_PORT'),
-    //     user: env.get('DB_USER'),
-    //     password: env.get('DB_PASSWORD'),
-    //     database: env.get('DB_DATABASE'),
-    //   },
-    //   migrations: {
-    //     naturalSort: true,
-    //     paths: ['database/migrations'],
-    //   },
-    //   debug: app.inDev,
-    // },
-
-    /**
-     * libSQL (Turso) connection.
-     * Install package to switch: npm install @libsql/client
-     */
-    // libsql: {
-    //   client: 'libsql',
-    //   connection: {
-    //     url: env.get('LIBSQL_URL'),
-    //     authToken: env.get('LIBSQL_AUTH_TOKEN'),
-    //   },
-    //   useNullAsDefault: true,
-    //   migrations: {
-    //     naturalSort: true,
-    //     paths: ['database/migrations'],
-    //   },
-    //   debug: app.inDev,
-    // },
   },
 })
-
-export default dbConfig

@@ -1,40 +1,73 @@
-import vine from '@vinejs/vine'
-import { USER_ROLES } from '#models/user'
+/*
+|--------------------------------------------------------------------------
+| VALIDÁTORY = pravidla pro data z formulářů
+|--------------------------------------------------------------------------
+|
+| Data z formuláře nikdy nejdou rovnou do databáze. Nejdřív projdou
+| validátorem, který zkontroluje, že jsou v pořádku (povinná pole,
+| délka, platný e-mail…).
+|
+| Použití v controlleru:
+|   const data = await request.validateUsing(loginValidator)
+|
+| Když data neprojdou, AdonisJS SÁM vrátí uživatele zpět na formulář
+| a chyby ukáže pod jednotlivými poli. Controller dál vůbec nepokračuje.
+|
+| Knihovna se jmenuje VineJS. České texty chyb jsou v start/validator.ts.
+|
+*/
 
-/**
- * Sdílená pravidla – každé pole je definované jen jednou
- * a jednotlivé validátory je jen skládají dohromady.
- */
+import vine from '@vinejs/vine'
+
+/*
+|--------------------------------------------------------------------------
+| Sdílená pravidla pro jednotlivá pole
+|--------------------------------------------------------------------------
+| Každé pravidlo je napsané jen jednou a validátory dole je skládají.
+| Jsou to funkce (() => …), protože každý validátor potřebuje vlastní
+| čerstvou kopii pravidla. Kdyby se sdílela jedna, úprava v jednom
+| validátoru (např. .sameAs()) by se projevila i ve všech ostatních.
+*/
+
+// Jméno: text, mezery na krajích se oříznou, 2 až 100 znaků
 const fullName = () => vine.string().trim().minLength(2).maxLength(100)
+
+// E-mail: platný formát, max. 254 znaků (víc e-mail podle normy mít nemůže)
 const email = () => vine.string().trim().email().maxLength(254)
+
+// Heslo: 8 až 32 znaků
 const password = () => vine.string().minLength(8).maxLength(32)
 
+// Role: jen jedna z těchto dvou hodnot, nic jiného neprojde
+const role = () => vine.enum(['admin', 'user'])
+
 /**
- * Unikátní e-mail s výjimkou uživatele, kterého právě upravujeme.
- * Bez filtru by úprava vlastního profilu selhala, protože "e-mail už existuje" (je to ten jeho).
+ * Unikátní e-mail (nesmí ho mít jiný účet), ALE s výjimkou uživatele,
+ * kterého právě upravujeme. Bez té výjimky by úprava selhala hláškou
+ * „e-mail už existuje“, protože v DB už je – je to přece jeho vlastní.
+ *
+ * ID upravovaného uživatele posílá controller jako „meta“:
+ *   request.validateUsing(validator, { meta: { userId: user.id } })
  */
-const uniqueEmailExcept = () =>
+const uniqueEmailExceptUser = () =>
   email().unique({
     table: 'users',
     column: 'email',
-    filter: (db, _value, field) => {
-      db.whereNot('id', field.meta.userId)
+    filter: (query, _value, field) => {
+      query.whereNot('id', field.meta.userId)
     },
   })
 
-/**
- * Registrace přes formulář /signup
- */
-export const signupValidator = vine.create({
-  fullName: fullName(),
-  email: email().unique({ table: 'users', column: 'email' }),
-  password: password(),
-  passwordConfirmation: password().sameAs('password'),
-})
+/*
+|--------------------------------------------------------------------------
+| Validátory pro jednotlivé formuláře
+|--------------------------------------------------------------------------
+*/
 
 /**
- * Přihlášení – tady záměrně nekontrolujeme délku hesla,
- * jen že něco přišlo. Správnost ověří User.verifyCredentials().
+ * Přihlášení (/login).
+ * U hesla se záměrně nekontroluje délka, jen že něco přišlo.
+ * Jestli je správné, ověří až User.verifyCredentials() v SessionControlleru.
  */
 export const loginValidator = vine.create({
   email: email(),
@@ -42,40 +75,44 @@ export const loginValidator = vine.create({
 })
 
 /**
- * Admin zakládá nového uživatele
+ * Admin zakládá nového uživatele (/users/create).
  */
 export const createUserValidator = vine.create({
   fullName: fullName(),
   email: email().unique({ table: 'users', column: 'email' }),
-  role: vine.enum(USER_ROLES),
-  // Nezaškrtnutý checkbox se v požadavku vůbec neposílá, proto optional()
+  role: role(),
+  // Nezaškrtnutý checkbox prohlížeč vůbec neodešle, proto .optional()
   isActive: vine.boolean().optional(),
   password: password(),
 })
 
 /**
- * Admin upravuje existujícího uživatele.
- * Heslo je nepovinné – prázdné pole = heslo se nemění.
+ * Admin upravuje existujícího uživatele (/users/5/edit).
+ * withMetaData<…>() říká, že validátor dostane navíc userId (viz výše).
+ * Heslo je nepovinné: prázdné pole = heslo se nemění.
  */
 export const updateUserValidator = vine.withMetaData<{ userId: number }>().create({
   fullName: fullName(),
-  email: uniqueEmailExcept(),
-  role: vine.enum(USER_ROLES),
+  email: uniqueEmailExceptUser(),
+  role: role(),
   isActive: vine.boolean().optional(),
   password: password().optional(),
 })
 
 /**
- * Uživatel mění svůj vlastní profil (bez role a stavu – ty smí měnit jen admin)
+ * Uživatel mění svůj vlastní profil (/settings/profile).
+ * Jen jméno a e-mail. Roli a blokaci smí měnit jen admin.
  */
 export const profileValidator = vine.withMetaData<{ userId: number }>().create({
   fullName: fullName(),
-  email: uniqueEmailExcept(),
+  email: uniqueEmailExceptUser(),
 })
 
 /**
- * Změna vlastního hesla – vyžaduje současné heslo,
- * aby účet nešel převzít jen z odemčeného počítače.
+ * Uživatel mění své heslo (/settings/password).
+ * Chce i současné heslo, aby účet nešel převzít jen z cizího odemčeného
+ * počítače. Jestli je současné heslo správné, ověřuje PasswordController.
+ * sameAs('password') = „Heslo znovu“ se musí shodovat s polem „Nové heslo“.
  */
 export const passwordValidator = vine.create({
   currentPassword: vine.string(),

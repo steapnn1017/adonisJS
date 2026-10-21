@@ -1,46 +1,73 @@
+/*
+|--------------------------------------------------------------------------
+| MODEL UŽIVATELE
+|--------------------------------------------------------------------------
+|
+| Model = JavaScriptová třída, přes kterou se pracuje s tabulkou „users“
+| v databázi. Místo psaní SQL se píše třeba:
+|
+|   await User.find(5)                    → SELECT * FROM users WHERE id = 5
+|   await User.create({ email: '…' })     → INSERT INTO users …
+|   user.fullName = 'Jana'; await user.save()   → UPDATE users …
+|
+| Sloupce tabulky (id, email, role…) se tu nepíšou ručně. AdonisJS je po
+| každé migraci sám vygeneruje do database/schema.ts (třída UserSchema)
+| a tenhle model od ní dědí. Tady je jen chování NAVÍC.
+|
+*/
+
 import { UserSchema } from '#database/schema'
 import hash from '@adonisjs/core/services/hash'
 import { column } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 
-export const USER_ROLES = ['admin', 'user'] as const
-export type UserRole = (typeof USER_ROLES)[number]
-
 /**
- * Model uživatele. Sloupce se generují automaticky do database/schema.ts
- * (z migrací), tady jen doplňujeme chování navíc.
- * withAuthFinder přidává User.verifyCredentials() a hashování hesla při uložení.
+ * compose() spojí několik tříd dohromady:
+ *   UserSchema               – sloupce z databáze
+ *   withAuthFinder(hash)     – přidá přihlašování:
+ *       • User.verifyCredentials(email, heslo) – najde uživatele a ověří heslo
+ *       • heslo se před uložením do DB samo zahashuje (v DB nikdy není čitelně)
  */
 export default class User extends compose(UserSchema, withAuthFinder(hash)) {
   /**
-   * SQLite neumí skutečný boolean a vrací 0/1.
-   * consume() převede hodnotu z DB na true/false, aby šablony a testy
-   * nemusely řešit, jestli je to číslo nebo boolean.
+   * SQLite nemá skutečný typ boolean, ukládá 1/0.
+   * consume() převede hodnotu načtenou z DB na true/false,
+   * aby šablony a controllery pracovaly s opravdovým booleanem.
    */
   @column({ consume: (value) => Boolean(value) })
   declare isActive: boolean
 
+  /**
+   * Je uživatel administrátor? V šabloně: @if(user.isAdmin)
+   * (get = „getter“, volá se bez závorek jako obyčejná vlastnost)
+   */
   get isAdmin() {
     return this.role === 'admin'
   }
 
   /**
-   * Jméno pro zobrazení – fullName je v DB nepovinné, tak padáme na e-mail.
+   * Jméno pro zobrazení. Jméno je v DB nepovinné, takže když chybí,
+   * ukáže se místo něj e-mail.
    */
   get displayName() {
     return this.fullName || this.email
   }
 
   /**
-   * Iniciály do avataru: z celého jména (první + poslední slovo),
-   * jinak první dvě písmena e-mailu.
+   * Iniciály do kolečka (avataru):
+   *   „Jana Nováková“ → „JN“  (první písmeno prvního a posledního slova)
+   *   „jana@test.cz“  → „JA“  (bez jména první dvě písmena)
    */
   get initials() {
-    const parts = this.fullName?.trim().split(/\s+/) ?? []
-    if (parts.length >= 2) {
-      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase()
+    const words = this.displayName.trim().split(/\s+/)
+
+    if (words.length >= 2) {
+      const first = words[0].charAt(0)
+      const last = words[words.length - 1].charAt(0)
+      return (first + last).toUpperCase()
     }
-    return (parts[0] ?? this.email).slice(0, 2).toUpperCase()
+
+    return this.displayName.slice(0, 2).toUpperCase()
   }
 }

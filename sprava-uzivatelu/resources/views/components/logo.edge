@@ -1,5 +1,10 @@
-{{-- Logo AdonisJS + název aplikace, vede na přehled --}}
-@link({ route: 'dashboard', class: 'brand', 'aria-label': 'Správa uživatelů, přehled' })
+{{--
+  LOGO: znak AdonisJS + název aplikace, vede na přehled.
+  Použití: @!logo()
+  Na mobilu se název schová a zůstane jen znak (CSS .brand__name).
+--}}
+<a href="{{ urlFor('dashboard') }}" class="brand" aria-label="Správa uživatelů, přehled">
+  {{-- SVG = obrázek popsaný kódem. fill="currentColor" = převezme barvu textu, takže funguje v obou motivech. --}}
   <svg width="24" height="24" viewBox="0 0 160 160" fill="none" aria-hidden="true">
     <path
       fill-rule="evenodd"
@@ -9,4 +14,4 @@
     />
   </svg>
   <span class="brand__name">Správa uživatelů</span>
-@end
+</a>

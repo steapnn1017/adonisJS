@@ -1,12 +1,34 @@
+{{--
+  FLASH HLÁŠKY – zelená („Změny byly uloženy.“) nebo červená („Nesprávné heslo.“)
+  krabička nahoře uprostřed obrazovky.
+
+  Controller ji pošle přes session.flash('success', 'Text') nebo
+  session.flash('error', 'Text'). „Flash“ = hláška vydrží právě jedno
+  přesměrování a pak sama zmizí ze session.
+
+  Vkládá se přes @include('partials/flash_alerts') do layouts/app.edge a pages/login.edge.
+
+  Alpine (x-...):
+    x-data   = proměnná visible, na začátku true (hláška je vidět)
+    x-init   = po 5 sekundách nastav visible na false
+    x-show   = zobrazuj, jen dokud je visible true
+    x-transition.opacity = zmizí plynulým zprůhledněním, ne skokem
+--}}
 <div class="flash-container">
-  @if(flashMessages.has('error'))
-    @alert.root({ variant: 'destructive', autoDismiss: true })
-      @!alert.title({ text: flashMessages.get('error') })
-    @end
-  @end
-  @if(flashMessages.has('success'))
-    @alert.root({ variant: 'success', autoDismiss: true })
-      @!alert.title({ text: flashMessages.get('success') })
+  @each(type in ['error', 'success'])
+    @if(flashMessages.has(type))
+      <div
+        class="alert alert--{{ type }}"
+        role="alert"
+        x-data="{ visible: true }"
+        x-init="setTimeout(() => visible = false, 5000)"
+        x-show="visible"
+        x-transition.opacity
+      >
+        {{-- Chyba = vykřičník, úspěch = fajfka --}}
+        @svg(type === 'error' ? 'lucide:circle-alert' : 'lucide:circle-check', { width: 18, height: 18, class: 'alert__icon' })
+        <p class="alert__text">{{ flashMessages.get(type) }}</p>
+      </div>
     @end
   @end
 </div>

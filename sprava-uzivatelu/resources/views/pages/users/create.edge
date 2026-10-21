@@ -1,25 +1,29 @@
+{{--
+  STRÁNKA: NOVÝ UŽIVATEL  (adresa /users/create, jen admin)
+  Renderuje: UsersController.create()  (app/controllers/users_controller.ts)
+  Formulář odesílá na: POST /users → UsersController.store()
+
+  Samotná pole jsou v partials/user_form.edge (sdílí je i úprava).
+--}}
 @layouts.app({ title: 'Nový uživatel' })
   @page({ title: 'Nový uživatel', description: 'Založ účet a rovnou mu nastav roli.', narrow: true })
     @slot('actions')
-      @link({ route: 'users.index', class: 'btn btn--ghost' })
+      <a href="{{ urlFor('users.index') }}" class="btn btn--ghost">
         @svg('lucide:arrow-left', { width: 15, height: 15 })
         Zpět na seznam
-      @end
+      </a>
     @end
 
-    @form({
-      route: 'users.store',
-      class: 'panel form-panel',
-      'x-data': '{ submitting: false }',
-      'x-on:submit': 'submitting = true',
-    })
+    <form method="POST" action="{{ urlFor('users.store') }}" class="panel">
+      {{ csrfField() }}
+
+      {{-- Pole jména, e-mailu, role, aktivního účtu a hesla --}}
       @include('partials/user_form')
+
       <div class="form-actions">
-        @link({ route: 'users.index', class: 'btn btn--ghost' })
-          Zrušit
-        @end
-        <button type="submit" class="btn btn--primary" x-bind:disabled="submitting">Vytvořit účet</button>
+        <a href="{{ urlFor('users.index') }}" class="btn btn--ghost">Zrušit</a>
+        <button type="submit" class="btn btn--primary">Vytvořit účet</button>
       </div>
-    @end
+    </form>
   @end
 @end

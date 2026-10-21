@@ -1,45 +1,72 @@
 /* ==========================================================================
-   Správa uživatelů – styly
-   Barvy, písmo a zaoblení jsou jen v tokenech nahoře. Přebarvení celé
-   aplikace = změna hodnot v :root, nic dalšího se nepřepisuje.
+   STYLY CELÉ APLIKACE
+   --------------------------------------------------------------------------
+   Jeden soubor, rozdělený na části (hledej nadpisy v rámečcích jako tenhle):
+
+     1. Barvy a písmo (tokeny)        8.  Statistiky na přehledu
+     2. Základ (reset)                9.  Seznam uživatelů (filtry, tabulka)
+     3. Tlačítka                      10. Potvrzovací dialog
+     4. Formuláře                     11. Nastavení
+     5. Avatar, štítky                12. Přihlašovací stránka
+     6. Hlavička a navigace           13. Flash hlášky
+     7. Rám stránky, panely           14. Animace
+                                      15. Mobil a menší obrazovky
+
+   Pojmenování tříd (BEM): .blok, .blok__cast, .blok--varianta
+     např. .btn = tlačítko, .btn--primary = hlavní tlačítko,
+           .page__title = nadpis uvnitř bloku .page
+
+   Do HTML se soubor vkládá přes @vite v resources/views/components/head.edge.
    ========================================================================== */
 
-/* Písmo Geist je v node_modules a Vite ho přibalí – žádné načítání z Google Fonts */
+/* Písmo Geist je nainstalované přes npm (node_modules) a Vite ho přibalí.
+   Nic se nestahuje z Google Fonts. */
 @import '@fontsource-variable/geist';
 
+/* ==========================================================================
+   1. BARVY A PÍSMO (tokeny)
+   --------------------------------------------------------------------------
+   Všechny barvy jsou jen tady jako proměnné (--nazev). Zbytek CSS je
+   používá přes var(--nazev). Přebarvení aplikace = změna hodnot tady.
+   ========================================================================== */
+
+/* Tmavý motiv (výchozí) */
 :root {
   --sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* tmavý motiv je výchozí */
-  --paper: #0b0c0e;
-  --card: #111215;
-  --ink: #ece8df;
-  --ink-2: #c9c5bc;
-  --muted: #8c8a84;
-  --subtle: #5f5e5a;
-  --placeholder: #7a7873;
-  --line: #1c1d21;
-  --line-2: #26272b;
-  --btn: #ece8df;
-  --btn-fg: #0b0c0e;
-  --ring: rgba(236, 232, 223, 0.16);
-  --field: #0e0f12;
-  --hover: rgba(236, 232, 223, 0.04);
+  --paper: #0b0c0e; /* pozadí stránky */
+  --card: #111215; /* pozadí karet a panelů */
+  --ink: #ece8df; /* hlavní text */
+  --ink-2: #c9c5bc; /* méně výrazný text */
+  --muted: #8c8a84; /* šedý pomocný text */
+  --subtle: #5f5e5a; /* ještě slabší (okraje při najetí myší) */
+  --placeholder: #7a7873; /* ukázkový text v prázdném poli */
+  --line: #1c1d21; /* jemné čáry mezi řádky */
+  --line-2: #26272b; /* okraje polí a karet */
+  --btn: #ece8df; /* pozadí hlavního tlačítka */
+  --btn-fg: #0b0c0e; /* text hlavního tlačítka */
+  --ring: rgba(236, 232, 223, 0.16); /* obrys prvku vybraného klávesnicí */
+  --field: #0e0f12; /* pozadí vstupních polí */
+  --hover: rgba(236, 232, 223, 0.04); /* zvýraznění řádku pod myší */
 
-  /* sémantické barvy jen pro stav účtu a chyby, nikdy jako dekorace */
+  /* Barvy jen pro stav účtu a chyby, nikdy jako dekorace */
   --ok: #9fcca4;
   --ok-bg: rgba(127, 182, 133, 0.12);
   --danger: #eb8f85;
   --danger-bg: rgba(224, 104, 92, 0.12);
   --danger-solid: #c2463a;
 
-  --r: 8px;
-  --r-lg: 12px;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --r: 8px; /* zaoblení rohů tlačítek a polí */
+  --r-lg: 12px; /* zaoblení rohů karet */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* křivka animací: rychle začne, jemně dobrzdí */
+
+  /* Řekne prohlížeči, ať i jeho vlastní prvky (scrollbar, kalendář) kreslí tmavě */
   color-scheme: dark;
 }
 
+/* Světlý motiv: přepíše jen barvy. Zapne ho <html data-theme="light">
+   (přepínač v resources/js/app.js). */
 :root[data-theme='light'] {
   --paper: #f3f2ee;
   --card: #fcfbf9;
@@ -64,6 +91,14 @@
   color-scheme: light;
 }
 
+/* ==========================================================================
+   2. ZÁKLAD (reset)
+   --------------------------------------------------------------------------
+   Prohlížeče mají vlastní výchozí okraje a styly. Tady je srovnáme,
+   aby stránka vypadala všude stejně.
+   ========================================================================== */
+
+/* Šířka prvku včetně okraje a výplně + žádné výchozí mezery */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -79,14 +114,16 @@ body {
   color: var(--ink);
   font-size: 15px;
   line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased; /* jemnější písmo na Macu */
   text-rendering: optimizeLegibility;
-  font-feature-settings: 'tnum' 1;
+  font-feature-settings: 'tnum' 1; /* číslice stejně široké, čísla v tabulce lícují */
 }
+/* Odkazy bez modré barvy a podtržení, styl dostanou podle třídy */
 a {
   color: inherit;
   text-decoration: none;
 }
+/* Formulářové prvky jinak nedědí písmo stránky */
 button,
 input,
 select {
@@ -101,13 +138,12 @@ button {
 ul {
   list-style: none;
 }
+/* Barva označeného textu */
 ::selection {
   background: var(--ink);
   color: var(--paper);
 }
-[x-cloak] {
-  display: none !important;
-}
+/* Text jen pro čtečky obrazovky: na obrazovce není vidět, ale čtečka ho přečte */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -116,9 +152,11 @@ ul {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Šedý text */
 .muted {
   color: var(--muted);
 }
+/* Kód / klávesa v rámečku (testovací účty na přihlášení) */
 .kbd {
   font-family: var(--mono);
   font-size: 12px;
@@ -129,13 +167,21 @@ ul {
   color: var(--ink-2);
 }
 
-/* --- tlačítka --- */
+/* ==========================================================================
+   3. TLAČÍTKA
+   --------------------------------------------------------------------------
+   <button class="btn btn--primary">       hlavní akce (Uložit)
+   <button class="btn btn--secondary">     vedlejší akce
+   <a class="btn btn--ghost">              nenápadná akce (Zrušit)
+   <button class="btn btn--danger">        nevratná akce (Smazat)
+   + btn--sm (menší), btn--block (přes celou šířku)
+   ========================================================================== */
 .btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 7px; /* mezera mezi ikonou a textem */
   height: 40px;
   padding: 0 16px;
   border-radius: var(--r);
@@ -150,6 +196,7 @@ ul {
     color 150ms ease,
     transform 160ms var(--ease-out);
 }
+/* Obrys při ovládání klávesnicí (Tab), myší se neukazuje */
 .btn:focus-visible,
 .iconbtn:focus-visible,
 .row:focus-visible,
@@ -157,7 +204,7 @@ ul {
   outline: none;
   box-shadow: 0 0 0 3px var(--ring);
 }
-/* zmáčknutí = okamžitá odezva, že aplikace klik zaregistrovala */
+/* Při zmáčknutí se tlačítko lehce zmenší = okamžitá odezva na klik */
 .btn:active:not(:disabled),
 .iconbtn:active {
   transform: scale(0.97);
@@ -189,11 +236,14 @@ ul {
   padding: 0 12px;
   font-size: 13.5px;
 }
+/* Neviditelně zvětší klikací plochu malého tlačítka (lepší na mobilu) */
 .btn--sm::after {
   content: '';
   position: absolute;
   inset: -5px 0;
 }
+/* Efekty při najetí myší jen na zařízeních, která myš mají
+   (na mobilu by hover „zůstal viset“ po ťuknutí) */
 @media (hover: hover) and (pointer: fine) {
   .btn--primary:hover,
   .btn--danger:hover {
@@ -207,7 +257,7 @@ ul {
   }
 }
 
-/* --- ikonová tlačítka --- */
+/* --- Čtvercová tlačítka jen s ikonou (upravit, smazat, motiv) --- */
 .iconbtn {
   position: relative;
   display: inline-grid;
@@ -223,11 +273,13 @@ ul {
     border-color 150ms ease,
     transform 160ms var(--ease-out);
 }
+/* Větší neviditelná klikací plocha */
 .iconbtn::after {
   content: '';
   position: absolute;
   inset: -4px;
 }
+/* Všechny ikony do stejné buňky mřížky = leží přes sebe (přepínač motivu) */
 .iconbtn > svg {
   grid-area: 1 / 1;
 }
@@ -236,6 +288,7 @@ ul {
     color: var(--ink);
     border-color: var(--subtle);
   }
+  /* Tlačítko smazat zčervená až při najetí */
   .iconbtn--danger:hover {
     color: var(--danger);
     border-color: var(--danger);
@@ -243,7 +296,9 @@ ul {
   }
 }
 
-/* ikony slunce/měsíce se prolnou na místě podle html[data-theme] */
+/* --- Přepínač motivu: slunce a měsíc přes sebe ---
+   Obě ikony jsou schované, vidět je jen ta, která odpovídá motivu
+   na <html data-theme>. Při přepnutí se plynule prolnou. */
 .themetoggle__icon {
   opacity: 0;
   scale: 0.4;
@@ -253,6 +308,7 @@ ul {
     scale 300ms var(--ease-out),
     filter 300ms var(--ease-out);
 }
+/* V tmavém motivu ukaž slunce (= „přepni na světlý“), ve světlém měsíc */
 :root[data-theme='dark'] .themetoggle__icon--sun,
 :root[data-theme='light'] .themetoggle__icon--moon {
   opacity: 1;
@@ -260,7 +316,13 @@ ul {
   filter: blur(0);
 }
 
-/* --- formulářová pole --- */
+/* ==========================================================================
+   4. FORMULÁŘE
+   --------------------------------------------------------------------------
+   HTML jednoho pole je v resources/views/components/field.edge
+   ========================================================================== */
+
+/* Obal pole: popisek, políčko, nápověda a chyba pod sebou */
 .field {
   display: flex;
   flex-direction: column;
@@ -270,6 +332,7 @@ ul {
   font-size: 13px;
   font-weight: 500;
 }
+/* Textové pole i select */
 .field__input {
   width: 100%;
   height: 40px;
@@ -282,11 +345,12 @@ ul {
     border-color 150ms ease,
     box-shadow 150ms ease;
 }
+/* Select: vlastní šipka místo systémové (ta se v tmavém motivu nehodí) */
 select.field__input {
   appearance: none;
   padding-right: 34px;
   cursor: pointer;
-  /* šipka selectu jako čistý CSS trojúhelník přes dva gradienty, ladí s barvou textu */
+  /* Šipka nakreslená dvěma šikmými přechody, takže převezme barvu z tokenu */
   background-image:
     linear-gradient(45deg, transparent 50%, var(--muted) 50%),
     linear-gradient(135deg, var(--muted) 50%, transparent 50%);
@@ -299,16 +363,19 @@ select.field__input {
 .field__input::placeholder {
   color: var(--placeholder);
 }
+/* Pole, do kterého se zrovna píše */
 .field__input:focus {
   outline: none;
   border-color: var(--muted);
   box-shadow: 0 0 0 3px var(--ring);
 }
+/* Prohlížeč by automaticky doplněné pole přebarvil na žluto/modro */
 .field__input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 1000px var(--field) inset;
   -webkit-text-fill-color: var(--ink);
 }
-.field__input[data-invalid='true'] {
+/* Pole s chybou validace (aria-invalid nastavuje field.edge) */
+.field__input[aria-invalid='true'] {
   border-color: var(--danger);
 }
 .field__hint {
@@ -321,7 +388,10 @@ select.field__input {
   color: var(--danger);
 }
 
-/* přepínač (checkbox) pro aktivní účet */
+/* --- Vypínač „Aktivní účet“ ---
+   Ve skutečnosti obyčejný checkbox. Ten se schová (zůstane funkční
+   a ovladatelný klávesnicí) a místo něj se nakreslí „kolejnička“
+   (track) s kuličkou (thumb). Znak + = „prvek hned za checkboxem“. */
 .switch {
   display: flex;
   align-items: flex-start;
@@ -351,6 +421,7 @@ select.field__input {
   background: var(--ink);
   transition: transform 200ms var(--ease-out);
 }
+/* Zaškrtnuto: kolejnička se vybarví a kulička odjede doprava */
 .switch__input:checked + .switch__track {
   background: var(--ink);
 }
@@ -371,7 +442,7 @@ select.field__input {
   font-weight: 500;
 }
 
-/* --- odkaz v textu --- */
+/* --- Odkaz v textu (il = inline link): jemné podtržení --- */
 .il {
   text-decoration: underline;
   text-decoration-color: var(--line-2);
@@ -382,7 +453,11 @@ select.field__input {
   text-decoration-color: var(--ink);
 }
 
-/* --- avatar s iniciálami a jméno + e-mail --- */
+/* ==========================================================================
+   5. AVATAR, JMÉNO, ŠTÍTKY
+   ========================================================================== */
+
+/* Kolečko s iniciálami (iniciály počítá model User → initials) */
 .avatar {
   flex: none;
   display: inline-grid;
@@ -406,10 +481,11 @@ select.field__input {
   height: 52px;
   font-size: 16px;
 }
+/* Jméno a e-mail pod sebou */
 .person {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  min-width: 0; /* bez tohohle by dlouhý e-mail roztáhl tabulku */
 }
 .person__name {
   display: flex;
@@ -423,6 +499,7 @@ select.field__input {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+/* Dlouhý e-mail se ořízne a dostane „…“ */
 .person__email {
   color: var(--muted);
   font-size: 13px;
@@ -430,10 +507,18 @@ select.field__input {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Štítky pod e-mailem (jen na mobilu, viz .show-sm na konci) */
 .person__badges {
   gap: 6px;
   margin-top: 6px;
 }
+/* Štítky vedle sebe ve sloupci „Role a stav“ */
+.badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Malý štítek „ty“ u vlastního účtu v seznamu */
 .you {
   font-size: 11px;
   font-weight: 500;
@@ -443,27 +528,30 @@ select.field__input {
   padding: 0 7px;
 }
 
-/* --- štítky role a stavu --- */
+/* --- Štítky role (badge) a stavu (status) --- */
 .badge,
 .status {
   display: inline-flex;
   align-items: center;
   height: 22px;
   padding: 0 9px;
-  border-radius: 999px;
+  border-radius: 999px; /* úplně kulaté konce */
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
+/* Uživatel: jen obrys */
 .badge {
   border: 1px solid var(--line-2);
   color: var(--muted);
 }
+/* Admin: plné pozadí, výraznější */
 .badge--strong {
   border-color: transparent;
   background: var(--ink);
   color: var(--paper);
 }
+/* Aktivní = zelená, zablokovaný = červená */
 .status--on {
   background: var(--ok-bg);
   color: var(--ok);
@@ -474,9 +562,11 @@ select.field__input {
 }
 
 /* ==========================================================================
-   Hlavička a navigace
+   6. HLAVIČKA A NAVIGACE  (resources/views/components/layouts/app.edge)
    ========================================================================== */
-.header--bar {
+
+/* Horní lišta: logo vlevo, uživatel + tlačítka vpravo */
+.header {
   height: 60px;
   display: flex;
   background: var(--card);
@@ -487,7 +577,7 @@ select.field__input {
   padding: 0 28px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-between; /* první prvek doleva, poslední doprava */
   gap: 16px;
 }
 .header__right {
@@ -495,6 +585,7 @@ select.field__input {
   align-items: center;
   gap: 10px;
 }
+/* Logo + název aplikace */
 .brand {
   display: inline-flex;
   align-items: center;
@@ -507,6 +598,7 @@ select.field__input {
   font-size: 15px;
   letter-spacing: -0.01em;
 }
+/* Avatar a jméno přihlášeného, oddělené svislou čárou */
 .userchip {
   display: inline-flex;
   align-items: center;
@@ -524,12 +616,13 @@ select.field__input {
   white-space: nowrap;
 }
 
+/* Navigace pod lištou (Přehled, Uživatelé, Nastavení) */
 .subnav {
   height: 46px;
   background: var(--card);
   border-bottom: 1px solid var(--line);
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow-x: auto; /* na úzkém displeji jde posouvat do strany */
+  scrollbar-width: none; /* …ale bez viditelného posuvníku */
 }
 .subnav__inner {
   display: flex;
@@ -552,6 +645,7 @@ select.field__input {
 .subnav__item[aria-current='page'] {
   color: var(--ink);
 }
+/* Aktivní položka: čára pod ní (::after = vložený prvek navíc, jen v CSS) */
 .subnav__item[aria-current='page']::after {
   content: '';
   position: absolute;
@@ -561,23 +655,29 @@ select.field__input {
   height: 2px;
   background: var(--ink);
 }
+/* Obsah stránky vyplní zbytek výšky okna (100vh minus lišta a navigace) */
 .app-main {
   display: flex;
   min-height: calc(100vh - 106px);
 }
 
 /* ==========================================================================
-   Stavební bloky stránky
+   7. RÁM STRÁNKY, PANELY, SEKCE FORMULÁŘE
+   (resources/views/components/page.edge a section.edge)
    ========================================================================== */
+
+/* Obsah vycentrovaný, max. šířka 1120 px */
 .page {
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
   padding: 40px 28px 72px;
 }
+/* Užší stránka pro formuláře */
 .page--narrow {
   max-width: 816px;
 }
+/* Nadpis vlevo, tlačítka vpravo; na úzké obrazovce se zalomí pod sebe */
 .page__header {
   display: flex;
   flex-wrap: wrap;
@@ -602,12 +702,14 @@ select.field__input {
   gap: 10px;
 }
 
+/* Panel = karta s okrajem */
 .panel {
   background: var(--card);
   border: 1px solid var(--line-2);
   border-radius: var(--r-lg);
   padding: 28px;
 }
+/* Panel bez vnitřního okraje (tabulka a seznam jdou až k hraně) */
 .panel--flush {
   padding: 0;
   overflow: hidden;
@@ -624,6 +726,8 @@ select.field__input {
   color: var(--muted);
 }
 
+/* Sekce formuláře: druhá a další sekce dostanou čáru nad sebou
+   (.section + .section = sekce, která následuje hned po jiné sekci) */
 .section + .section {
   margin-top: 26px;
   padding-top: 26px;
@@ -644,15 +748,15 @@ select.field__input {
   display: flex;
   flex-direction: column;
   gap: 18px;
-}
-.section__header + .section__body {
   margin-top: 18px;
 }
+/* Dvě pole vedle sebe (jméno a e-mail) */
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
+/* Řádek s tlačítky pod formulářem, zarovnaný doprava */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -661,6 +765,7 @@ select.field__input {
   padding-top: 20px;
   border-top: 1px solid var(--line);
 }
+/* Informační rámeček („Upravuješ svůj vlastní účet…“) */
 .note {
   display: flex;
   align-items: center;
@@ -677,7 +782,11 @@ select.field__input {
   color: var(--muted);
 }
 
-/* --- statistiky na přehledu: jen čísla, žádný graf --- */
+/* ==========================================================================
+   8. PŘEHLED  (resources/views/pages/dashboard.edge)
+   ========================================================================== */
+
+/* Čtyři dlaždice s čísly vedle sebe */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -708,7 +817,7 @@ select.field__input {
   color: var(--muted);
 }
 
-/* --- řádky seznamu (naposledy přidaní) --- */
+/* Seznam „Naposledy přidaní“: čára mezi řádky (li + li = každý kromě prvního) */
 .rows li + li {
   border-top: 1px solid var(--line);
 }
@@ -722,6 +831,7 @@ select.field__input {
 .row:hover {
   background: var(--hover);
 }
+/* „před 3 dny“ úplně vpravo (margin-left: auto odstrčí prvek doprava) */
 .row__meta {
   margin-left: auto;
   font-size: 13px;
@@ -729,7 +839,7 @@ select.field__input {
   white-space: nowrap;
 }
 
-/* --- karta vlastního účtu (běžný uživatel) --- */
+/* Karta vlastního účtu (běžný uživatel) */
 .account {
   max-width: 640px;
 }
@@ -738,6 +848,7 @@ select.field__input {
   align-items: center;
   gap: 16px;
 }
+/* Tři údaje vedle sebe: role, založen, poslední přihlášení */
 .facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -761,13 +872,18 @@ select.field__input {
   margin-top: 24px;
 }
 
-/* --- filtry nad tabulkou --- */
+/* ==========================================================================
+   9. SEZNAM UŽIVATELŮ  (resources/views/pages/users/index.edge)
+   ========================================================================== */
+
+/* Řádek filtrů nad tabulkou, na úzké obrazovce se zalomí */
 .filters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 16px;
 }
+/* Vyhledávací pole se roztáhne, ikona lupy je uvnitř vlevo */
 .search {
   position: relative;
   flex: 1 1 260px;
@@ -776,21 +892,21 @@ select.field__input {
   position: absolute;
   left: 12px;
   top: 50%;
-  translate: 0 -50%;
+  translate: 0 -50%; /* svislé vycentrování */
   color: var(--muted);
-  pointer-events: none;
+  pointer-events: none; /* klik projde skrz ikonu do pole */
 }
 .search__input {
-  padding-left: 36px;
+  padding-left: 36px; /* místo pro ikonu */
 }
 .filters__select {
   flex: 0 1 180px;
 }
 
-/* --- tabulka uživatelů --- */
+/* Tabulka */
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: collapse; /* okraje buněk splynou do jedné čáry */
   font-size: 14px;
 }
 .table th {
@@ -806,6 +922,7 @@ select.field__input {
   padding: 12px 16px;
   vertical-align: middle;
 }
+/* Čára mezi řádky (ne nad prvním) */
 .table tbody tr + tr td {
   border-top: 1px solid var(--line);
 }
@@ -823,15 +940,18 @@ select.field__input {
   font-size: 13.5px;
   white-space: nowrap;
 }
+/* Sloupec s tlačítky: jen tak široký, jak je nutné, zarovnaný doprava */
 .table__actions {
   width: 1%;
   white-space: nowrap;
   text-align: right;
   padding-right: 18px !important;
 }
+/* Mezera mezi tlačítky Upravit a Smazat */
 .table__actions > * + * {
   margin-left: 6px;
 }
+/* Avatar vedle jména */
 .person-cell {
   display: flex;
   align-items: center;
@@ -839,7 +959,7 @@ select.field__input {
   min-width: 0;
 }
 
-/* --- stránkování --- */
+/* Stránkování: Předchozí | Strana 1 z 2 | Další (tři sloupce, prostřední uprostřed) */
 .pager {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -854,7 +974,7 @@ select.field__input {
   color: var(--muted);
 }
 
-/* --- prázdný stav --- */
+/* Prázdný stav „Nikoho jsme nenašli“ */
 .empty {
   display: flex;
   flex-direction: column;
@@ -884,16 +1004,18 @@ select.field__input {
   margin-bottom: 8px;
 }
 
-/* --- potvrzovací dialog mazání --- */
+/* ==========================================================================
+   10. POTVRZOVACÍ DIALOG SMAZÁNÍ  (<dialog> v pages/users/index.edge)
+   ========================================================================== */
 .dialog {
-  margin: auto;
-  width: min(420px, calc(100% - 32px));
+  margin: auto; /* vycentrovat na obrazovce */
+  width: min(420px, calc(100% - 32px)); /* 420 px, na mobilu šířka displeje minus okraje */
   border: 1px solid var(--line-2);
   border-radius: var(--r-lg);
   background: var(--card);
   color: var(--ink);
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55);
-  /* otevření: krátké zesílení + nepatrné zvětšení ze středu (modál není ukotvený k tlačítku) */
+  /* Otevření: krátké zesílení + nepatrné zvětšení ze středu */
   opacity: 1;
   transform: scale(1);
   transition:
@@ -902,16 +1024,19 @@ select.field__input {
     display 200ms allow-discrete,
     overlay 200ms allow-discrete;
 }
+/* Zavřený dialog (stav, do kterého animuje při zavírání) */
 .dialog:not([open]) {
   opacity: 0;
   transform: scale(0.96);
 }
+/* @starting-style = odkud animace začne v okamžiku otevření */
 @starting-style {
   .dialog[open] {
     opacity: 0;
     transform: scale(0.96);
   }
 }
+/* Ztmavené pozadí za dialogem */
 .dialog::backdrop {
   background: rgba(5, 5, 6, 0.6);
   transition:
@@ -927,6 +1052,7 @@ select.field__input {
 .dialog__body {
   padding: 24px;
 }
+/* Červené kolečko s ikonou koše */
 .dialog__icon {
   display: grid;
   place-items: center;
@@ -955,7 +1081,11 @@ select.field__input {
   margin-top: 22px;
 }
 
-/* --- nastavení: menu vlevo --- */
+/* ==========================================================================
+   11. NASTAVENÍ  (resources/views/components/layouts/settings.edge)
+   ========================================================================== */
+
+/* Menu vlevo (220 px), obsah vpravo (zbytek) */
 .sidebar-layout {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -986,6 +1116,7 @@ select.field__input {
 .sidebar-layout__item[aria-current='page'] {
   color: var(--ink);
 }
+/* Aktivní položka menu: podbarvená s jemným rámečkem */
 .sidebar-layout__item[aria-current='page'] {
   background: var(--card);
   box-shadow: inset 0 0 0 1px var(--line-2);
@@ -993,13 +1124,17 @@ select.field__input {
 .sidebar-layout__content {
   max-width: 620px;
 }
+/* Ve formulářích nastavení je tlačítko vlevo (krátký formulář, oko jde zleva) */
 .stack .form-actions {
   justify-content: flex-start;
 }
 
 /* ==========================================================================
-   Přihlášení / registrace
+   12. PŘIHLAŠOVACÍ STRÁNKA
+   (resources/views/pages/login.edge)
    ========================================================================== */
+
+/* Dva sloupce: formulář | popis aplikace */
 .auth {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
@@ -1011,6 +1146,7 @@ select.field__input {
   padding: 28px 36px;
   background: var(--card);
 }
+/* margin: auto vycentruje formulář ve volném místě sloupce */
 .auth__form-wrap {
   margin: auto;
   width: 100%;
@@ -1034,12 +1170,7 @@ select.field__input {
   gap: 16px;
   margin-top: 26px;
 }
-.auth__foot {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 13.5px;
-  color: var(--muted);
-}
+/* Pravý sloupec: přepínač motivu nahoře, velký text, seznam funkcí dole */
 .auth__aside {
   display: flex;
   flex-direction: column;
@@ -1057,7 +1188,7 @@ select.field__input {
   font-weight: 600;
   line-height: 1.08;
   letter-spacing: -0.04em;
-  max-width: 13ch;
+  max-width: 13ch; /* max. 13 znaků na řádek = hezky zalomený nadpis */
   text-wrap: balance;
 }
 .auth__facts {
@@ -1075,6 +1206,7 @@ select.field__input {
 .auth__facts svg {
   color: var(--muted);
 }
+/* Box s testovacími účty (jen při vývoji) */
 .demo {
   margin-top: 22px;
   padding: 14px 16px;
@@ -1097,42 +1229,12 @@ select.field__input {
   margin-right: 6px;
 }
 
-/* --- chybové stránky --- */
-.plain {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  padding: 24px 16px;
-}
-.plain__card {
-  width: min(440px, 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-.plain__code {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--muted);
-}
-.plain__title {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
-.plain__text {
-  color: var(--muted);
-  font-size: 14.5px;
-  margin-bottom: 10px;
-}
-
 /* ==========================================================================
-   Flash hlášky (toast nahoře, schová se sám po 5 s – viz app.js)
+   13. FLASH HLÁŠKY  (resources/views/partials/flash_alerts.edge)
+   Krabička nahoře uprostřed, po 5 s sama zmizí.
    ========================================================================== */
+
+/* Pevně nahoře přes obsah stránky (position: fixed, z-index = nad vším) */
 .flash-container {
   position: fixed;
   top: 18px;
@@ -1143,7 +1245,7 @@ select.field__input {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  pointer-events: none;
+  pointer-events: none; /* prázdné místo kolem hlášky neblokuje kliky na stránku */
 }
 .alert {
   display: flex;
@@ -1160,37 +1262,32 @@ select.field__input {
 }
 .alert__icon {
   flex: none;
-  display: inline-flex;
   margin-top: 1px;
 }
-.alert__body {
-  flex: 1;
-  min-width: 0;
-}
-.alert__title {
+.alert__text {
   font-weight: 500;
   font-size: 14px;
   line-height: 1.4;
 }
-.alert__description {
-  color: var(--muted);
-  font-size: 13.5px;
-}
+/* Úspěch = zelená ikona, chyba = červená */
 .alert--success .alert__icon {
   color: var(--ok);
 }
-.alert--destructive .alert__icon {
+.alert--error .alert__icon {
   color: var(--danger);
 }
 
 /* ==========================================================================
-   Pohyb při načtení – krátké vyjetí obsahu, jen pokud to systém dovolí
+   14. ANIMACE PŘI NAČTENÍ
+   Obsah stránky krátce vyjede zdola. Jen když uživatel v systému
+   nevypnul animace (prefers-reduced-motion).
    ========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
   .page > *,
   .stat {
     animation: rise 420ms var(--ease-out) both;
   }
+  /* Postupné zpoždění = prvky vyjíždějí jeden po druhém */
   .page > :nth-child(2) {
     animation-delay: 50ms;
   }
@@ -1206,18 +1303,15 @@ select.field__input {
   .stat:nth-child(4) {
     animation-delay: 120ms;
   }
-  .alert {
-    transition:
-      opacity 200ms var(--ease-out),
-      transform 200ms var(--ease-out);
-  }
 }
+/* Animace „rise“: z průhledného a o 6 px níž do normálu */
 @keyframes rise {
   from {
     opacity: 0;
     transform: translateY(6px);
   }
 }
+/* Kdo má animace v systému vypnuté, dialog se otevře okamžitě */
 @media (prefers-reduced-motion: reduce) {
   .dialog,
   .dialog::backdrop {
@@ -1226,19 +1320,26 @@ select.field__input {
 }
 
 /* ==========================================================================
-   Responzivita
+   15. MOBIL A MENŠÍ OBRAZOVKY
+   @media (max-width: X) = pravidla platí jen pro okno užší než X.
+   hide-md / hide-sm schovají prvek na menší obrazovce / mobilu,
+   show-sm naopak ukáže prvek JEN na mobilu.
    ========================================================================== */
 .show-sm {
   display: none;
 }
+
+/* Tablet a menší notebook */
 @media (max-width: 960px) {
   .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* dlaždice 2×2 */
   }
   .hide-md {
     display: none;
   }
 }
+
+/* Přihlášení: pravý sloupec s popisem pryč, zůstane jen formulář */
 @media (max-width: 880px) {
   .auth {
     grid-template-columns: 1fr;
@@ -1247,6 +1348,8 @@ select.field__input {
     display: none;
   }
 }
+
+/* Velký telefon / malý tablet */
 @media (max-width: 720px) {
   .header__inner,
   .subnav__inner {
@@ -1264,10 +1367,12 @@ select.field__input {
   .panel--flush {
     padding: 0;
   }
+  /* Pole a údaje pod sebou místo vedle sebe */
   .grid-2,
   .facts {
     grid-template-columns: 1fr;
   }
+  /* Menu nastavení nahoře vodorovně místo vlevo */
   .sidebar-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -1279,6 +1384,8 @@ select.field__input {
     padding: 20px 16px;
   }
 }
+
+/* Telefon */
 @media (max-width: 600px) {
   .hide-sm,
   .userchip,
@@ -1301,6 +1408,7 @@ select.field__input {
   .stat__value {
     font-size: 28px;
   }
+  /* Tlačítka formuláře přes celou šířku, hlavní (Uložit) nahoře */
   .form-actions {
     flex-direction: column-reverse;
   }

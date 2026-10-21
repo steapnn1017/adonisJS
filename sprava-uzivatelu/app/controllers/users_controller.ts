@@ -1,39 +1,71 @@
-import User, { USER_ROLES, type UserRole } from '#models/user'
+/*
+|--------------------------------------------------------------------------
+| SPRÁVA UŽIVATELŮ (jen pro adminy)
+|--------------------------------------------------------------------------
+|
+| Routy vytváří router.resource('users') v start/routes.ts:
+|   GET    /users           → index()    seznam s hledáním a filtry
+|   GET    /users/create    → create()   formulář pro nového uživatele
+|   POST   /users           → store()    uloží nového uživatele
+|   GET    /users/:id/edit  → edit()     formulář úpravy
+|   PUT    /users/:id       → update()   uloží úpravy
+|   DELETE /users/:id       → destroy()  smaže uživatele
+|
+| Že sem smí jen admin, hlídá middleware admin (app/middleware/), ne tenhle soubor.
+| Šablony: resources/views/pages/users/
+|
+*/
+
+import User from '#models/user'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import type { HttpContext } from '@adonisjs/core/http'
 
+// Kolik uživatelů se ukáže na jedné stránce seznamu
 const PER_PAGE = 10
-const STATUSES = ['active', 'blocked'] as const
 
-/**
- * Správa uživatelů – dostupná jen pro adminy (hlídá middleware.admin() v routes.ts).
- * Klasický CRUD: výpis s hledáním a filtry, vytvoření, úprava, smazání.
- */
 export default class UsersController {
   /**
-   * Seznam uživatelů. Filtry chodí v query stringu (?q=&role=&status=&page=),
-   * takže jde odkaz na vyfiltrovaný seznam poslat dál nebo dát do záložek.
+   * Seznam uživatelů s hledáním, filtry a stránkováním.
+   *
+   * Filtry chodí v adrese (query string), např. /users?q=jana&role=admin&page=2.
+   * Díky tomu jde vyfiltrovaný seznam poslat odkazem nebo dát do záložek.
    */
   async index({ request, view }: HttpContext) {
+    // request.input('q', '') = hodnota ?q= z adresy, když chybí, tak ''
     const q = String(request.input('q', '')).trim()
-    // Hodnoty z URL nikdy nepouštíme do dotazu napřímo – jen ty, které známe
-    const role = pick(request.input('role'), USER_ROLES)
-    const status = pick(request.input('status'), STATUSES)
-    const page = Math.max(1, Number(request.input('page', 1)) || 1)
+    const role = request.input('role', '')
+    const status = request.input('status', '')
+    const page = Number(request.input('page', 1)) || 1
 
-    const users = await User.query()
-      .if(q, (query) => {
-        // Závorka kolem OR, jinak by se rozbila kombinace s dalšími filtry
-        query.where((sub) => sub.whereLike('full_name', `%${q}%`).orWhereLike('email', `%${q}%`))
+    // Začneme dotaz: všichni uživatelé, nejnovější nahoře.
+    // Dotaz se zatím NEspustí, jen se skládá. Spustí ho až paginate() dole.
+    const query = User.query().orderBy('created_at', 'desc').orderBy('id', 'desc')
+
+    // Hledání ve jméně NEBO e-mailu. % = „cokoli“, takže %jana% najde i „Jana Nová“.
+    // Podmínky jsou v závorce (funkce uvnitř where), jinak by se OR
+    // pobilo s dalšími filtry a vracelo by špatné výsledky.
+    if (q) {
+      query.where((sub) => {
+        sub.whereLike('full_name', `%${q}%`).orWhereLike('email', `%${q}%`)
       })
-      .if(role, (query) => query.where('role', role!))
-      .if(status, (query) => query.where('is_active', status === 'active'))
-      .orderBy('created_at', 'desc')
-      .orderBy('id', 'desc')
-      .paginate(page, PER_PAGE)
+    }
 
-    // Stránkovací odkazy si musí pamatovat aktivní filtry
-    users.baseUrl(request.url()).queryString({ q, role, status })
+    // Filtr role. Do dotazu pustíme jen hodnoty, které známe,
+    // nikdy ne cokoli, co někdo napíše do adresy.
+    if (role === 'admin' || role === 'user') {
+      query.where('role', role)
+    }
+
+    // Filtr stavu účtu
+    if (status === 'active') query.where('is_active', true)
+    if (status === 'blocked') query.where('is_active', false)
+
+    // Spustí dotaz a vrátí jen jednu stránku výsledků (+ celkový počet)
+    const users = await query.paginate(page, PER_PAGE)
+
+    // Odkazy „Další / Předchozí“ musí v adrese nést i aktivní filtry,
+    // jinak by se na druhé stránce filtr ztratil
+    users.baseUrl('/users').queryString({ q, role, status })
 
     return view.render('pages/users/index', {
       users,
@@ -42,82 +74,96 @@ export default class UsersController {
     })
   }
 
+  /**
+   * Formulář pro nového uživatele.
+   */
   async create({ view }: HttpContext) {
     return view.render('pages/users/create')
   }
 
+  /**
+   * Uloží nového uživatele.
+   */
   async store({ request, response, session }: HttpContext) {
-    const payload = await request.validateUsing(createUserValidator)
-    const user = await User.create({ ...payload, isActive: payload.isActive ?? false })
+    // Zvaliduj data. Při chybě se uživatel SÁM vrátí na formulář s hláškami.
+    const data = await request.validateUsing(createUserValidator)
+
+    // Nezaškrtnutý checkbox nepřijde vůbec (undefined) → uložíme false.
+    // ?? = „když vlevo nic není, použij hodnotu vpravo“
+    const user = await User.create({ ...data, isActive: data.isActive ?? false })
 
     session.flash('success', `Uživatel ${user.displayName} byl vytvořen.`)
-    return response.redirect().withQs(false).toRoute('users.index')
+    return response.redirect().toRoute('users.index')
   }
 
+  /**
+   * Formulář úpravy.
+   * findOrFail = najdi podle ID, a když neexistuje, vrať stránku 404.
+   * params.id = číslo z adresy /users/:id/edit
+   */
   async edit({ params, view }: HttpContext) {
     const user = await User.findOrFail(params.id)
     return view.render('pages/users/edit', { user })
   }
 
+  /**
+   * Uloží úpravy uživatele.
+   */
   async update({ params, request, response, session, auth }: HttpContext) {
     const user = await User.findOrFail(params.id)
-    const {
-      password,
-      isActive = false,
-      ...payload
-    } = await request.validateUsing(updateUserValidator, { meta: { userId: user.id } })
 
-    const lockout = selfLockoutError(auth.getUserOrFail(), user, { role: payload.role, isActive })
-    if (lockout) {
-      session.flash('error', lockout)
+    // meta.userId = validátor ví, čí e-mail nemá hlásit jako „už použitý“
+    const data = await request.validateUsing(updateUserValidator, {
+      meta: { userId: user.id },
+    })
+    const isActive = data.isActive ?? false
+
+    /**
+     * Ochrana: admin si nesmí sám sobě odebrat roli admina ani zablokovat
+     * účet. Jinak by se mohl odříznout od administrace a v aplikaci by
+     * nakonec nemusel zůstat žádný admin.
+     */
+    const isMe = user.id === auth.user!.id
+    if (isMe && (data.role !== 'admin' || !isActive)) {
+      session.flash('error', 'Sám sobě nemůžeš odebrat roli admina ani zablokovat účet.')
       return response.redirect().back()
     }
 
-    user.merge({ ...payload, isActive })
-    // Prázdné heslo = beze změny. Nové heslo se zahashuje samo díky withAuthFinder.
-    if (password) user.password = password
+    user.fullName = data.fullName
+    user.email = data.email
+    user.role = data.role
+    user.isActive = isActive
+
+    // Prázdné heslo = nechat to staré. Nové heslo se při save() samo
+    // zahashuje (zařizuje to withAuthFinder v modelu User).
+    if (data.password) {
+      user.password = data.password
+    }
+
     await user.save()
 
     session.flash('success', 'Změny byly uloženy.')
-    return response.redirect().withQs(false).toRoute('users.index')
+    return response.redirect().toRoute('users.index')
   }
 
+  /**
+   * Smaže uživatele.
+   */
   async destroy({ params, response, session, auth }: HttpContext) {
     const user = await User.findOrFail(params.id)
 
-    const lockout = selfLockoutError(auth.getUserOrFail(), user, 'delete')
-    if (lockout) {
-      session.flash('error', lockout)
-      return response.redirect().back()
+    // Ochrana: admin nesmí smazat sám sebe (tlačítko se mu ani neukáže,
+    // tohle hlídá i případ, kdy by někdo poslal požadavek ručně)
+    if (user.id === auth.user!.id) {
+      session.flash('error', 'Svůj vlastní účet smazat nemůžeš.')
+      return response.redirect().withQs().back()
     }
 
     await user.delete()
+
     session.flash('success', `Uživatel ${user.displayName} byl smazán.`)
-    return response.redirect().back()
+    // back() = zpět na stránku, odkud požadavek přišel (seznam uživatelů).
+    // withQs() = i s jejími ?parametry, takže zůstanou filtry a číslo stránky.
+    return response.redirect().withQs().back()
   }
-}
-
-/**
- * Ochrana proti tomu, aby se admin sám odřízl od administrace.
- * Stačí hlídat vlastní účet: kdo tuhle akci provádí, je aktivní admin,
- * takže v systému vždy zůstane aspoň jeden (on sám).
- */
-function selfLockoutError(
-  actor: User,
-  target: User,
-  change: 'delete' | { role: UserRole; isActive: boolean }
-) {
-  if (actor.id !== target.id) return null
-  if (change === 'delete') return 'Svůj vlastní účet smazat nemůžeš.'
-  if (change.role !== 'admin' || !change.isActive) {
-    return 'Sám sobě nemůžeš odebrat roli admina ani zablokovat účet.'
-  }
-  return null
-}
-
-/**
- * Vrátí hodnotu jen tehdy, když patří mezi povolené – jinak undefined (= filtr se nepoužije).
- */
-function pick<T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
-  return allowed.includes(value as T) ? (value as T) : undefined
 }

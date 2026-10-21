@@ -1,27 +1,30 @@
 /*
 |--------------------------------------------------------------------------
-| Environment variables service
+| PROMĚNNÉ PROSTŘEDÍ (.env)
 |--------------------------------------------------------------------------
 |
-| The `Env.create` method creates an instance of the Env service. The
-| service validates the environment variables and also cast values
-| to JavaScript data types.
+| Hodnoty jako port nebo tajný klíč nejsou v kódu, ale v souboru .env
+| (ten se do gitu nedává, vzor je v .env.example).
+|
+| Tady se při startu zkontroluje, že v .env je všechno, co aplikace
+| potřebuje, a ve správném tvaru. Když něco chybí, aplikace vůbec
+| nenastartuje a rovnou napíše, co je špatně.
+|
+| V kódu se hodnota čte přes env.get('PORT').
 |
 */
 
 import { Env } from '@adonisjs/core/env'
 
 export default await Env.create(new URL('../', import.meta.url), {
-  // Node
-  NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
+  // Režim běhu: vývoj (npm run dev), nebo produkce (npm start)
+  NODE_ENV: Env.schema.enum(['development', 'production'] as const),
+  // Port a adresa, na které server poslouchá (výchozí localhost:3333)
   PORT: Env.schema.number(),
   HOST: Env.schema.string({ format: 'host' }),
+  // Kolik toho logovat do terminálu (info, debug, warn, error…)
   LOG_LEVEL: Env.schema.string(),
 
-  // App
+  // Tajný klíč pro šifrování cookies a session. Vygeneruje: node ace generate:key
   APP_KEY: Env.schema.secret(),
-  APP_URL: Env.schema.string({ format: 'url', tld: false }),
-
-  // Session
-  SESSION_DRIVER: Env.schema.enum(['cookie', 'memory', 'database'] as const),
 })

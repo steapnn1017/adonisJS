@@ -1,33 +1,25 @@
 /*
 |--------------------------------------------------------------------------
-| Validator file
+| VALIDACE – české chybové hlášky
 |--------------------------------------------------------------------------
 |
-| The validator file is used for configuring global transforms for VineJS.
-| The transform below converts all VineJS date outputs from JavaScript
-| Date objects to Luxon DateTime instances, so that validated dates are
-| ready to use with Lucid models and other parts of the app that expect
-| Luxon DateTime.
+| Samotná pravidla (co je povinné, jak dlouhé…) jsou v app/validators/user.ts.
+| Tady jsou jen texty chyb, které se ukážou pod polem formuláře.
+|
+| Jak se hláška vybírá:
+|   1. nejdřív se hledá přesná kombinace „pole.pravidlo“
+|      (např. 'passwordConfirmation.sameAs')
+|   2. když není, použije se obecná hláška podle pravidla (např. 'required')
+|
+| {{ field }} se nahradí českým názvem pole z druhého objektu dole,
+| {{ min }} / {{ max }} se nahradí číslem z pravidla.
 |
 */
 
-import { DateTime } from 'luxon'
-import vine, { VineDate, SimpleMessagesProvider } from '@vinejs/vine'
+import vine, { SimpleMessagesProvider } from '@vinejs/vine'
 
-declare module '@vinejs/vine/types' {
-  interface VineGlobalTransforms {
-    date: DateTime
-  }
-}
-
-VineDate.transform((value) => DateTime.fromJSDate(value))
-
-/**
- * České chybové hlášky pro všechny validátory najednou.
- * Klíč = název pravidla, {{ field }} se nahradí českým názvem pole z druhého objektu.
- * Konkrétní kombinace pole + pravidlo (např. 'passwordConfirmation.sameAs') má přednost.
- */
 vine.messagesProvider = new SimpleMessagesProvider(
+  // Texty chyb: klíč = název pravidla (nebo pole.pravidlo)
   {
     'required': 'Pole {{ field }} je povinné.',
     'string': 'Pole {{ field }} musí být text.',
@@ -39,6 +31,7 @@ vine.messagesProvider = new SimpleMessagesProvider(
     'database.unique': 'Tento e-mail už používá jiný účet.',
     'passwordConfirmation.sameAs': 'Hesla se neshodují.',
   },
+  // České názvy polí: klíč = name="" ve formuláři
   {
     fullName: 'jméno',
     email: 'e-mail',

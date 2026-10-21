@@ -1,12 +1,23 @@
+{{--
+  STRÁNKA: ÚPRAVA UŽIVATELE  (adresa /users/5/edit, jen admin)
+  Renderuje: UsersController.edit()  (app/controllers/users_controller.ts)
+  Formulář odesílá na: PUT /users/5 → UsersController.update()
+
+  Proměnné z controlleru:
+    user – upravovaný uživatel z databáze
+
+  Samotná pole jsou v partials/user_form.edge (sdílí je i „Nový uživatel“).
+--}}
 @layouts.app({ title: user.displayName })
   @page({ title: user.displayName, description: `Účet založen ${formatDate(user.createdAt)}`, narrow: true })
     @slot('actions')
-      @link({ route: 'users.index', class: 'btn btn--ghost' })
+      <a href="{{ urlFor('users.index') }}" class="btn btn--ghost">
         @svg('lucide:arrow-left', { width: 15, height: 15 })
         Zpět na seznam
-      @end
+      </a>
     @end
 
+    {{-- Upozornění, když admin upravuje sám sebe (ochrana je i v controlleru) --}}
     @if(user.id === auth.user.id)
       <p class="note">
         @svg('lucide:info', { width: 16, height: 16 })
@@ -14,20 +25,16 @@
       </p>
     @end
 
-    @form({
-      route: 'users.update',
-      routeParams: { id: user.id },
-      class: 'panel form-panel',
-      'x-data': '{ submitting: false }',
-      'x-on:submit': 'submitting = true',
-    })
+    {{-- ?_method=PUT: formulář posílá POST, AdonisJS ho bere jako PUT (viz config/app.ts) --}}
+    <form method="POST" action="{{ urlFor('users.update', { id: user.id }) }}?_method=PUT" class="panel">
+      {{ csrfField() }}
+
       @include('partials/user_form')
+
       <div class="form-actions">
-        @link({ route: 'users.index', class: 'btn btn--ghost' })
-          Zrušit
-        @end
-        <button type="submit" class="btn btn--primary" x-bind:disabled="submitting">Uložit změny</button>
+        <a href="{{ urlFor('users.index') }}" class="btn btn--ghost">Zrušit</a>
+        <button type="submit" class="btn btn--primary">Uložit změny</button>
       </div>
-    @end
+    </form>
   @end
 @end

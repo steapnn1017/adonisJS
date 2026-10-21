@@ -1,15 +1,28 @@
 {{--
-  Přehled. Controller posílá:
-    stats       – čísla pro admina (null pro běžného uživatele)
-    recentUsers – 5 nejnovějších účtů (jen pro admina)
+  STRÁNKA: PŘEHLED  (adresa /dashboard)
+  Renderuje: DashboardController.index()  (app/controllers/dashboard_controller.ts)
+
+  Proměnné z controlleru:
+    stats       – čísla pro admina { total, active, admins, newThisWeek },
+                  pro běžného uživatele null
+    recentUsers – 5 nejnovějších účtů (běžný uživatel dostane prázdný seznam)
+
+  Admin vidí 4 dlaždice s čísly a seznam nových účtů.
+  Běžný uživatel vidí kartu se svým účtem.
 --}}
 @let(me = auth.user)
+
+{{-- Pozdrav křestním jménem: „Jana Nováková“ → „Jana“. Bez jména e-mail. --}}
+@let(firstName = me.fullName ? me.fullName.split(' ')[0] : me.email)
+
 @layouts.app({ title: 'Přehled' })
   @page({
-    title: `Ahoj, ${me.fullName ? me.fullName.split(' ')[0] : me.email}`,
+    title: `Ahoj, ${firstName}`,
     description: me.isAdmin ? 'Takhle teď vypadají účty v aplikaci.' : 'Tady je přehled tvého účtu.',
   })
+
     @if(stats)
+      {{-- ===== ADMIN: dlaždice s čísly ===== --}}
       <section class="stats" aria-label="Souhrn účtů">
         <div class="stat">
           <span class="stat__label">Všechny účty</span>
@@ -19,6 +32,7 @@
         <div class="stat">
           <span class="stat__label">Aktivní</span>
           <span class="stat__value">{{ stats.active }}</span>
+          {{-- Procento aktivních. Při 0 účtech by se dělilo nulou, proto podmínka. --}}
           <span class="stat__hint">
             {{ stats.total ? Math.round(stats.active / stats.total * 100) : 0 }} % všech účtů
           </span>
@@ -31,33 +45,36 @@
         <div class="stat">
           <span class="stat__label">Noví za 7 dní</span>
           <span class="stat__value">{{ stats.newThisWeek }}</span>
-          <span class="stat__hint">registrace a založené účty</span>
+          <span class="stat__hint">nově založené účty</span>
         </div>
       </section>
 
+      {{-- ===== ADMIN: 5 nejnovějších účtů, klik = úprava ===== --}}
       <section class="panel panel--flush">
         <header class="panel__head">
           <h2 class="section__title">Naposledy přidaní</h2>
-          @link({ route: 'users.index', class: 'il panel__link' })
-            Všichni uživatelé
-          @end
+          <a href="{{ urlFor('users.index') }}" class="il panel__link">Všichni uživatelé</a>
         </header>
         <ul class="rows">
           @each(user in recentUsers)
             <li>
-              @link({ route: 'users.edit', routeParams: { id: user.id }, class: 'row' })
+              {{-- urlFor s parametrem: users.edit + { id: 5 } → /users/5/edit --}}
+              <a href="{{ urlFor('users.edit', { id: user.id }) }}" class="row">
                 <span class="avatar" aria-hidden="true">{{ user.initials }}</span>
                 <span class="person">
                   <span class="person__name">{{ user.displayName }}</span>
                   <span class="person__email">{{ user.email }}</span>
                 </span>
+                {{-- fromNow = „před 3 dny“ (helper ze start/view.ts) --}}
                 <span class="row__meta">{{ fromNow(user.createdAt) }}</span>
-              @end
+              </a>
             </li>
           @end
         </ul>
       </section>
+
     @else
+      {{-- ===== BĚŽNÝ UŽIVATEL: karta vlastního účtu ===== --}}
       <section class="panel account">
         <div class="account__head">
           <span class="avatar avatar--lg" aria-hidden="true">{{ me.initials }}</span>
@@ -66,6 +83,8 @@
             <span class="person__email">{{ me.email }}</span>
           </div>
         </div>
+
+        {{-- dl/dt/dd = HTML seznam „název: hodnota“ --}}
         <dl class="facts">
           <div>
             <dt>Role</dt>
@@ -80,15 +99,13 @@
             <dd>{{ me.lastLoginAt ? fromNow(me.lastLoginAt) : 'teď poprvé' }}</dd>
           </div>
         </dl>
+
         <div class="account__actions">
-          @link({ route: 'profile.edit', class: 'btn btn--secondary' })
-            Upravit profil
-          @end
-          @link({ route: 'password.edit', class: 'btn btn--ghost' })
-            Změnit heslo
-          @end
+          <a href="{{ urlFor('profile.edit') }}" class="btn btn--secondary">Upravit profil</a>
+          <a href="{{ urlFor('password.edit') }}" class="btn btn--ghost">Změnit heslo</a>
         </div>
       </section>
     @end
+
   @end
 @end

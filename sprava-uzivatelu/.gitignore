@@ -1,26 +1,30 @@
-# Dependencies and AdonisJS build
+# Soubory a složky, které git ignoruje (nedostanou se do repozitáře)
+
+# Nainstalované balíčky (vytvoří npm install) a přeložená aplikace (npm run build)
 node_modules
 build
+
+# Databáze a dočasné soubory. Prázdná složka tmp/ v gitu zůstane díky .gitkeep.
 tmp/*
 !tmp/.gitkeep
 
-# Secrets
+# Tajné hodnoty (APP_KEY…). Do gitu jde jen vzor .env.example.
 .env
 .env.local
 .env.production.local
 .env.development.local
 
-# Frontend assets compiled code
+# Zkompilované CSS a JS (vytvoří npm run build)
 public/assets
 
-# Build tools specific
+# Logy chyb balíčkovacích nástrojů
 npm-debug.log
 yarn-error.log
 
-# Editors specific
+# Nastavení editorů
 .fleet
 .idea
 .vscode
 
-# Platform specific
+# Systémové soubory macOS
 .DS_Store

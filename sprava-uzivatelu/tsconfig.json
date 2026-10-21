@@ -1,7 +1,12 @@
+// NASTAVENÍ TYPESCRIPTU
+// Kontrola typů: npm run typecheck
+// Základní pravidla jsou převzatá z oficiálního nastavení AdonisJS (extends).
 {
   "extends": "@adonisjs/tsconfig/tsconfig.app.json",
   "compilerOptions": {
+    // Kořen zdrojových souborů = celý projekt
     "rootDir": "./",
+    // Kam se při `npm run build` uloží přeložený JavaScript
     "outDir": "./build"
   }
 }

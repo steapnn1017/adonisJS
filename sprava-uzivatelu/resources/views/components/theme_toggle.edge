@@ -1,21 +1,21 @@
-{{-- Přepínač světlý/tmavý motiv. Logika je v resources/js/app.js (Alpine komponenta themeToggle). --}}
+{{--
+  PŘEPÍNAČ SVĚTLÝ / TMAVÝ MOTIV
+  Použití: @!themeToggle()
+
+  Klik spustí funkci toggle z Alpine komponenty „themeToggle“
+  v resources/js/app.js (x-data = která komponenta, x-on:click = co při kliku).
+
+  V tlačítku jsou obě ikony (slunce i měsíc) přes sebe. Kterou je vidět,
+  řeší jen CSS podle <html data-theme="..."> (hledej .themetoggle v app.css).
+--}}
 <button
   type="button"
   class="iconbtn"
-  data-initial-theme="{{ currentTheme(request) }}"
   x-data="themeToggle"
-  x-bind:aria-label="theme === 'dark' ? 'Přepnout na světlý motiv' : 'Přepnout na tmavý motiv'"
-  x-bind:title="theme === 'dark' ? 'Přepnout na světlý motiv' : 'Přepnout na tmavý motiv'"
   x-on:click="toggle"
+  aria-label="Přepnout světlý / tmavý motiv"
+  title="Přepnout motiv"
 >
-  @svg('lucide:sun', {
-    width: 16,
-    height: 16,
-    class: 'themetoggle__icon themetoggle__icon--sun',
-  })
-  @svg('lucide:moon', {
-    width: 16,
-    height: 16,
-    class: 'themetoggle__icon themetoggle__icon--moon',
-  })
+  @svg('lucide:sun', { width: 16, height: 16, class: 'themetoggle__icon themetoggle__icon--sun' })
+  @svg('lucide:moon', { width: 16, height: 16, class: 'themetoggle__icon themetoggle__icon--moon' })
 </button>

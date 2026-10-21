@@ -1,25 +1,43 @@
 {{--
-  Seznam uživatelů. Controller posílá:
-    users      – stránkovaný výsledek (Lucid paginator, jde procházet přes @each)
-    filters    – { q, role, status } z URL, aby formulář zůstal vyplněný
-    hasFilters – true, když je aktivní aspoň jeden filtr
+  STRÁNKA: SEZNAM UŽIVATELŮ  (adresa /users, jen admin)
+  Renderuje: UsersController.index()  (app/controllers/users_controller.ts)
+
+  Proměnné z controlleru:
+    users      – jedna stránka uživatelů (stránkovač z Lucidu). Jde procházet
+                 přes @each a navíc zná total, currentPage, lastPage…
+    filters    – { q, role, status } z adresy, aby filtry zůstaly vyplněné
+    hasFilters – true, když je zapnutý aspoň jeden filtr
+
+  Části stránky: 1) filtry  2) tabulka  3) dialog smazání  4) stránkování
+                 5) prázdný stav, když nikdo neodpovídá filtru
 --}}
 @let(me = auth.user)
+
+{{-- plural() = české skloňování (start/view.ts): 1 účet, 3 účty, 14 účtů --}}
+@let(count = plural(users.total, 'účet', 'účty', 'účtů'))
+
 @layouts.app({ title: 'Uživatelé' })
   @page({
     title: 'Uživatelé',
-    description: hasFilters ? `Filtru odpovídá ${plural(users.total, "účet", "účty", "účtů")}.` : `Celkem ${plural(users.total, "účet", "účty", "účtů")} v aplikaci.`,
+    description: hasFilters ? `Filtru odpovídá ${count}.` : `Celkem ${count} v aplikaci.`,
   })
+    {{-- Tlačítko vpravo od nadpisu --}}
     @slot('actions')
-      @link({ route: 'users.create', class: 'btn btn--primary' })
+      <a href="{{ urlFor('users.create') }}" class="btn btn--primary">
         @svg('lucide:user-plus', { width: 16, height: 16 })
         Nový uživatel
-      @end
+      </a>
     @end
 
-    {{-- GET formulář: filtry se propíšou do URL. Změna selectu formulář rovnou odešle. --}}
+    {{--
+      ===== 1) FILTRY =====
+      Formulář s metodou GET: hodnoty se nepošlou „potají“, ale propíšou se
+      do adresy (/users?q=jana&role=admin). Controller si je odtud přečte.
+      onchange u selectu = po výběru formulář rovnou odešli (bez klikání na Hledat).
+    --}}
     <form method="GET" action="{{ urlFor('users.index') }}" class="filters" role="search">
       <label class="search">
+        {{-- sr-only = text jen pro čtečky obrazovky, na obrazovce není vidět --}}
         <span class="sr-only">Hledat podle jména nebo e-mailu</span>
         @svg('lucide:search', { width: 16, height: 16, class: 'search__icon' })
         <input
@@ -31,38 +49,47 @@
           autocomplete="off"
         />
       </label>
+
       <label class="filters__select">
         <span class="sr-only">Role</span>
-        <select name="role" class="field__input" x-data x-on:change="$el.form.requestSubmit()">
+        <select name="role" class="field__input" onchange="this.form.requestSubmit()">
           <option value="">Všechny role</option>
           <option value="admin" {{ filters.role === 'admin' ? 'selected' : '' }}>Administrátoři</option>
           <option value="user" {{ filters.role === 'user' ? 'selected' : '' }}>Uživatelé</option>
         </select>
       </label>
+
       <label class="filters__select">
         <span class="sr-only">Stav</span>
-        <select name="status" class="field__input" x-data x-on:change="$el.form.requestSubmit()">
+        <select name="status" class="field__input" onchange="this.form.requestSubmit()">
           <option value="">Všechny stavy</option>
           <option value="active" {{ filters.status === 'active' ? 'selected' : '' }}>Aktivní</option>
           <option value="blocked" {{ filters.status === 'blocked' ? 'selected' : '' }}>Zablokovaní</option>
         </select>
       </label>
+
       <button type="submit" class="btn btn--secondary">Hledat</button>
+
+      {{-- Zrušit filtry = odkaz na čisté /users bez parametrů --}}
       @if(hasFilters)
-        @link({ route: 'users.index', class: 'btn btn--ghost' })
-          Zrušit filtry
-        @end
+        <a href="{{ urlFor('users.index') }}" class="btn btn--ghost">Zrušit filtry</a>
       @end
     </form>
 
     @if(users.length)
+      {{--
+        x-data="confirmDelete" = Alpine komponenta z resources/js/app.js.
+        Obaluje tabulku i dialog, aby tlačítko v řádku mohlo dialog otevřít.
+      --}}
       <div class="panel panel--flush" x-data="confirmDelete">
+
+        {{-- ===== 2) TABULKA ===== --}}
+        {{-- hide-sm / hide-md = sloupec se schová na mobilu / menší obrazovce (CSS dole v app.css) --}}
         <table class="table">
           <thead>
             <tr>
               <th scope="col">Uživatel</th>
-              <th scope="col" class="hide-sm">Role</th>
-              <th scope="col" class="hide-sm">Stav</th>
+              <th scope="col" class="hide-sm">Role a stav</th>
               <th scope="col" class="hide-md">Založen</th>
               <th scope="col" class="hide-md">Poslední přihlášení</th>
               <th scope="col"><span class="sr-only">Akce</span></th>
@@ -71,46 +98,55 @@
           <tbody>
             @each(user in users)
               <tr>
+                {{-- Avatar, jméno, e-mail --}}
                 <td>
                   <div class="person-cell">
                     <span class="avatar" aria-hidden="true">{{ user.initials }}</span>
                     <span class="person">
                       <span class="person__name">
                         {{ user.displayName }}
+                        {{-- Štítek „ty“ u vlastního účtu --}}
                         @if(user.id === me.id)
                           <span class="you">ty</span>
                         @end
                       </span>
                       <span class="person__email">{{ user.email }}</span>
-                      {{-- Na mobilu se sloupce role/stav schovají a ukážou se tady --}}
+                      {{-- Na mobilu se sloupec „Role a stav“ schová, štítky jsou pak tady --}}
                       <span class="person__badges show-sm">
                         @include('partials/user_badges')
                       </span>
                     </span>
                   </div>
                 </td>
+
+                {{-- Role a stav (stejné štítky jako výše, jen pro počítač) --}}
                 <td class="hide-sm">
-                  <span class="badge {{ user.isAdmin ? 'badge--strong' : '' }}">
-                    {{ user.isAdmin ? 'Admin' : 'Uživatel' }}
+                  <span class="badges">
+                    @include('partials/user_badges')
                   </span>
                 </td>
-                <td class="hide-sm">
-                  <span class="status {{ user.isActive ? 'status--on' : 'status--off' }}">
-                    {{ user.isActive ? 'Aktivní' : 'Zablokovaný' }}
-                  </span>
-                </td>
+
+                {{-- formatDate / fromNow = helpery ze start/view.ts --}}
                 <td class="hide-md muted">{{ formatDate(user.createdAt) }}</td>
                 <td class="hide-md muted">{{ user.lastLoginAt ? fromNow(user.lastLoginAt) : 'nikdy' }}</td>
+
+                {{-- Tlačítka Upravit a Smazat --}}
                 <td class="table__actions">
-                  @link({
-                    route: 'users.edit',
-                    routeParams: { id: user.id },
-                    class: 'iconbtn',
-                    'aria-label': `Upravit ${user.displayName}`,
-                    title: 'Upravit',
-                  })
+                  <a
+                    href="{{ urlFor('users.edit', { id: user.id }) }}"
+                    class="iconbtn"
+                    aria-label="Upravit {{ user.displayName }}"
+                    title="Upravit"
+                  >
                     @svg('lucide:pencil', { width: 15, height: 15 })
-                  @end
+                  </a>
+
+                  {{--
+                    Smazat se nedá sám sebe, proto u vlastního účtu tlačítko chybí
+                    (a controller to hlídá i na serveru).
+                    Tlačítko nic nemaže, jen otevře potvrzovací dialog a předá mu
+                    jméno a adresu přes data-* atributy.
+                  --}}
                   @if(user.id !== me.id)
                     <button
                       type="button"
@@ -118,7 +154,7 @@
                       aria-label="Smazat {{ user.displayName }}"
                       title="Smazat"
                       data-name="{{ user.displayName }}"
-                      data-action="{{ formAttributes('users.destroy', { id: user.id }).action }}"
+                      data-action="{{ urlFor('users.destroy', { id: user.id }) }}?_method=DELETE"
                       x-on:click="open($el)"
                     >
                       @svg('lucide:trash-2', { width: 15, height: 15 })
@@ -130,7 +166,16 @@
           </tbody>
         </table>
 
-        {{-- Jeden sdílený dialog pro všechny řádky – tlačítko mu jen předá jméno a adresu --}}
+        {{--
+          ===== 3) POTVRZOVACÍ DIALOG SMAZÁNÍ =====
+          Jeden dialog pro celou tabulku. <dialog> je vestavěný HTML prvek
+          pro okno přes stránku. Jméno a adresu mu doplní Alpine:
+            x-text="name"            → vypíše jméno uživatele
+            x-bind:action="action"   → nastaví, kam se formulář odešle
+          x-on:click.self = klik mimo okno (na ztmavené pozadí) dialog zavře.
+          Teprve odeslání tohohle formuláře uživatele opravdu smaže
+          (POST s ?_method=DELETE → UsersController.destroy).
+        --}}
         <dialog class="dialog" x-ref="dialog" aria-labelledby="delete-title" x-on:click.self="close()">
           <form method="POST" x-bind:action="action" class="dialog__body">
             {{ csrfField() }}
@@ -151,6 +196,12 @@
         </dialog>
       </div>
 
+      {{--
+        ===== 4) STRÁNKOVÁNÍ =====
+        Jen když je víc stránek. Adresy předchozí/další stránky zná stránkovač
+        sám (i s aktivními filtry, nastavuje je controller přes queryString()).
+        Prázdný <span> drží místo, aby text uprostřed zůstal uprostřed.
+      --}}
       @if(users.hasPages)
         <nav class="pager" aria-label="Stránkování">
           @if(users.currentPage > 1)
@@ -161,7 +212,9 @@
           @else
             <span></span>
           @end
+
           <span class="pager__info">Strana {{ users.currentPage }} z {{ users.lastPage }}</span>
+
           @if(users.hasMorePages)
             <a class="btn btn--secondary btn--sm" href="{{ users.getNextPageUrl() }}" rel="next">
               Další
@@ -172,16 +225,16 @@
           @end
         </nav>
       @end
+
     @else
+      {{-- ===== 5) PRÁZDNÝ STAV: filtru nikdo neodpovídá ===== --}}
       <div class="panel empty">
         <div class="empty__mark">
           @svg('lucide:search-x', { width: 22, height: 22 })
         </div>
         <h2>Nikoho jsme nenašli</h2>
         <p>Zkus jiné hledání nebo zruš filtry.</p>
-        @link({ route: 'users.index', class: 'btn btn--secondary' })
-          Zrušit filtry
-        @end
+        <a href="{{ urlFor('users.index') }}" class="btn btn--secondary">Zrušit filtry</a>
       </div>
     @end
   @end

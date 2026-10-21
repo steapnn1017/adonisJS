@@ -1,94 +1,64 @@
-import env from '#start/env'
+/*
+|--------------------------------------------------------------------------
+| NASTAVENÍ HTTP SERVERU A COOKIES
+|--------------------------------------------------------------------------
+*/
+
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/core/http'
 
-/**
- * The app URL can be used in various places where you want to create absolute
- * URLs to your application. For example, when sending emails, images should
- * use absolute URLs.
- */
-export const appUrl = env.get('APP_URL')
-
-/**
- * The configuration settings used by the HTTP server
- */
 export const http = defineConfig({
   /**
-   * Generate a unique request ID for each incoming HTTP request.
-   * Useful for request tracing and debugging in logs.
+   * Každý požadavek dostane unikátní ID, které se objeví v logu.
+   * Pomáhá dohledat, který řádek logu patří ke kterému požadavku.
    */
   generateRequestId: true,
 
   /**
-   * Allow method spoofing via _method query parameter or form field.
-   * Enables using PUT, PATCH, DELETE methods in HTML forms by spoofing
-   * through POST requests with _method field.
+   * HTML formulář umí jen GET a POST. Díky tomuhle jde poslat PUT/DELETE
+   * jako POST s ?_method=PUT v adrese formuláře, např.:
+   *   <form method="POST" action="/users/5?_method=PUT">
    */
   allowMethodSpoofing: true,
 
   /**
-   * Enabling async local storage will let you access HTTP context
-   * from anywhere inside your application.
+   * Přístup k aktuálnímu požadavku odkudkoli v kódu.
+   * Nepotřebujeme, ctx se předává do controllerů přímo.
    */
   useAsyncLocalStorage: false,
 
+  /**
+   * Algoritmus, kterým router hledá routu podle adresy.
+   * 'tree' je rychlý strom, nic se tu měnit nemusí.
+   */
   router: {
     matcher: 'tree',
   },
 
   /**
-   * Redirect configuration controls the behavior of
-   * response.redirect().back() and query string forwarding.
+   * Při přesměrování NEpřenášet ?parametry automaticky. Kam se má
+   * přesměrovat, říká vždy přesně controller. Kde je chceme zachovat
+   * (seznam po smazání uživatele), přidá je controller sám přes withQs().
    */
   redirect: {
-    /**
-     * When enabled, all redirects automatically carry over the current
-     * request's query string parameters to the redirect destination.
-     * Use withQs(false) to opt out for a specific redirect.
-     */
-    forwardQueryString: true,
+    forwardQueryString: false,
   },
 
   /**
-   * Manage cookies configuration. The settings for the session id cookie are
-   * defined inside the "config/session.ts" file.
+   * Výchozí nastavení cookies (cookie session je zvlášť v config/session.ts).
    */
   cookie: {
-    /**
-     * The domain for which the cookie is valid.
-     * Empty string means the cookie is valid for the current domain only.
-     */
+    // Prázdné = cookie platí jen pro tuhle doménu
     domain: '',
-
-    /**
-     * The path for which the cookie is valid.
-     * The cookie is accessible for all routes when the value is '/'.
-     */
+    // '/' = cookie platí pro všechny adresy aplikace
     path: '/',
-
-    /**
-     * Maximum age of the cookie.
-     * After this time, the cookie will expire.
-     */
+    // Jak dlouho cookie vydrží
     maxAge: '2h',
-
-    /**
-     * When true, the cookie is only accessible via HTTP(S) and not
-     * by client-side JavaScript, helping prevent XSS attacks.
-     */
+    // JavaScript v prohlížeči cookie nepřečte (ochrana proti krádeži přes XSS)
     httpOnly: true,
-
-    /**
-     * When true, the cookie is only sent over HTTPS connections.
-     * Enabled in production for security.
-     */
+    // Na produkci posílat cookie jen přes HTTPS
     secure: app.inProduction,
-
-    /**
-     * Controls when cookies are sent with cross-site requests.
-     * This setting provides reasonable security while allowing some cross-site
-     * usage (value: 'lax').
-     */
+    // Cookie se nepošle s požadavky z cizích webů (část ochrany proti CSRF)
     sameSite: 'lax',
   },
 })

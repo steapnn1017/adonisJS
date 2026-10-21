@@ -1,25 +1,41 @@
 {{--
-  Rám stránky: nadpis, popis a volitelná tlačítka vpravo (slot "actions").
-  narrow: true = užší stránka pro formuláře, aby tlačítka v hlavičce lícovala s formulářem.
+  RÁM STRÁNKY: nadpis, popis pod ním a volitelná tlačítka vpravo.
+
+  Použití:
+    @page({ title: 'Uživatelé', description: 'Celkem 14 účtů.' })
+      @slot('actions')
+        ... tlačítka vpravo od nadpisu (nepovinné) ...
+      @end
+
+      ... obsah stránky ...
+    @end
+
+  Parametry:
+    title       – velký nadpis (h1)
+    description – šedý text pod nadpisem (nepovinné)
+    narrow      – true = užší stránka (pro formuláře), nepovinné
+
+  Slot = pojmenované místo pro obsah. „main“ je všechno uvnitř,
+  „actions“ je to, co je uvnitř @slot('actions') ... @end.
 --}}
-@let(pageTitle = $props.get('title'))
-@let(pageDescription = $props.get('description'))
+@let(title = $props.get('title'))
+@let(description = $props.get('description'))
 
 <div class="page {{ $props.get('narrow') ? 'page--narrow' : '' }}">
-  @if(pageTitle || pageDescription || $slots.actions)
-    <header class="page__header">
-      <div>
-        @if(pageTitle)
-          <h1 class="page__title">{{ pageTitle }}</h1>
-        @end
-        @if(pageDescription)
-          <p class="page__description">{{ pageDescription }}</p>
-        @end
-      </div>
-      @if($slots.actions)
-        <div class="page__actions">{{{ await $slots.actions() }}}</div>
+  <header class="page__header">
+    <div>
+      <h1 class="page__title">{{ title }}</h1>
+      @if(description)
+        <p class="page__description">{{ description }}</p>
       @end
-    </header>
-  @end
+    </div>
+
+    {{-- Tlačítka vpravo jen tehdy, když stránka nějaká poslala --}}
+    @if($slots.actions)
+      <div class="page__actions">{{{ await $slots.actions() }}}</div>
+    @end
+  </header>
+
+  {{-- Hlavní obsah stránky --}}
   {{{ await $slots.main() }}}
 </div>
